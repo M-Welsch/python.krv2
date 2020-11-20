@@ -1,4 +1,4 @@
 import pycmus
 
-class CmusWrapper(pycmus):
+class CmusWrapper():
     pass
