@@ -1,0 +1,2 @@
+class CmusWrapper:
+    pass
