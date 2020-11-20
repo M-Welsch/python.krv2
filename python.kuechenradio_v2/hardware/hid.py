@@ -8,17 +8,33 @@ except ImportError:
     from mockups.mockupgpio import GPIO
 
 
+class Pinout:
+    buttons = {
+        "next_source" : 40,
+        "prev_source" : None,
+        "pause_play" : None,
+        "next_song" : None,
+        "prev_song" : None,
+        "back" : None
+    }
+    enc = {
+        "a":None,
+        "b":None,
+        "sw":None
+    }
+
+
 class HumanInterfaceDevice(threading.Thread):
     def __init__(self):
         super().__init__()
         GPIO.setmode(GPIO.BOARD)
-        self._buttons = Buttons(GPIO)
+        self._buttons = Buttons()
         self._exitflag = False
 
     def run(self):
         logging.info("Starting Human Interface Device Mainloop")
         while not self._exitflag:
-            if GPIO.event_detected(21):
+            if GPIO.event_detected(Pinout.buttons["next"]):
                 print("Event!!")
             sleep(0.05)
         logging.info("Stopping Human Interface Device Mainloop")
@@ -28,16 +44,16 @@ class HumanInterfaceDevice(threading.Thread):
 
 
 class Buttons:
-    def __init__(self, gpio):
-        self._gpio = gpio
+    def __init__(self):
         self._setup_buttons()
 
     def _setup_buttons(self):
-        GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(21, GPIO.FALLING)
+        for button in Pinout.buttons.values():
+            GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(button, GPIO.FALLING)
 
     def next_source(self):
-        return self._gpio.input()
+        return None
 
     def prev_source(self):
         pass
@@ -47,10 +63,16 @@ class Buttons:
 
 
 class Encoder:
-    def __init__(self, gpio):
-        self._gpio = gpio
+    def __init__(self):
+        self._setup_encoder_pins()
+        self._state = 0
+
+    def _setup_encoder_pins(self):
+        for enc_pin in Pinout.enc.values():
+            GPIO.setup(enc_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(enc_pin, GPIO.FALLING)
 
 
 class Potentiometer:
-    def __init__(self, gpio):
-        self._gpio = gpio
+    def __init__(self):
+        pass
