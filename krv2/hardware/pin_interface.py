@@ -7,19 +7,21 @@ from collections import namedtuple
 
 
 class Pins:
-    sel_display_0n1 = 26 # Pin 37
     buttons = {
-        "next_source" : None,
-        "prev_source" : None,
-        "pause_play" : None,
-        "next_song" : None,
-        "prev_song" : None,
-        "back" : None
+        "next_source": None,
+        "button_below_next_source": None,
+        "back": None,
+        "pause_play": None,
+        "next_song": None,
+        "prev_song": None,
+        "shuffle_random": None,
+        "button_right_to_shuffle_random": None
     }
+    sel_display_0n1 = 26 # Pin 37
     enc = {
         "a":12, # Pin 32
         "b":13, # Pin 33
-        "sw":5, # Pin 29
+        "sw":5 # Pin 29
     }
 
 
@@ -31,15 +33,20 @@ class PinInterface:
         self._setup_encoder_pins()
         self._setup_internal_signals
 
-    def _setup_buttons(self):
+    @staticmethod
+    def _setup_buttons():
         for button in Pins.buttons.values():
             GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(button, GPIO.FALLING)
 
-    def _setup_encoder_pins(self):
-        for enc_pin in Pinout.enc.values():
+    @staticmethod
+    def _setup_encoder_pins():
+        for enc_pin in Pins.enc.values():
             GPIO.setup(enc_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(enc_pin, GPIO.FALLING)
 
-    def _setup_internal_signals(self):
-        GPIO.setmode(Pins.sel_display_0n1, GPIO.OUT, initial = GPIO.LOW)
+    @staticmethod
+    def _setup_internal_signals():
+        GPIO.setmode(Pins.sel_display_0n1, GPIO.OUT, initial=GPIO.LOW)
+
+

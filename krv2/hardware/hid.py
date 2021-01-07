@@ -1,7 +1,7 @@
 import threading
 import logging
 from time import sleep
-from hardware.pin_interface import PinInterface
+from krv2.hardware.pin_interface import PinInterface
 
 
 class HumanInterfaceDevice(threading.Thread):
