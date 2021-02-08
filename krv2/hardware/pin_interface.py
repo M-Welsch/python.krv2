@@ -26,6 +26,8 @@ class Pins:
 
 
 class PinInterface:
+    __instance = None
+
     def __init__(self):
         gpio_mode = GPIO.BCM
         GPIO.setmode(gpio_mode)
