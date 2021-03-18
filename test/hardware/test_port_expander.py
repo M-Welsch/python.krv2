@@ -8,6 +8,7 @@ sys.path.append(path_to_module)
 print(path_to_module)
 
 from krv2.hardware.port_expander import MCP23017
+from krv2.hardware.pin_interface import PinInterface
 
 
 outputs = [
@@ -29,12 +30,51 @@ outputs = [
     "GPB7"
 ]
 
+@pytest.fixture(scope="class")
+def mcp():
+    pin_interface = PinInterface()
+    mcp23017 = MCP23017(0x20, pin_interface)
+    yield mcp23017
 
-#@pytest.mark.skip("never run such a test if any driver is connected to the pe's GP pins!")
-def test_outputs():
-    mcp = MCP23017(0x20)
-    for output in outputs:
-        mcp.pin_setup(output, 0)
-        mcp.pin_output(output, 1)
-        sleep(0.1)
-        mcp.pin_setup(output, 1)
+
+class TestMCP23017:
+
+    @staticmethod
+    @pytest.mark.skip("never run such a test if any driver is connected to the pe's GP pins!")
+    def test_outputs(mcp):
+        for output in outputs:
+            mcp.pin_setup(output, 0)
+            mcp.pin_output(output, 1)
+            sleep(0.1)
+            mcp.pin_setup(output, 1)
+
+    @staticmethod
+    def test_input(mcp):
+        mcp.set_polarity_porta(0xFF)
+        mcp.set_pullups_porta(0xff)
+        mcp.set_polarity_portb(0xFF)
+        mcp.set_pullups_portb(0xff)
+        try:
+            while True:
+                print(mcp.read_input())
+                sleep(0.5)
+        except KeyboardInterrupt:
+            pass
+
+    @staticmethod
+    def test_interrupt(mcp):
+        mcp.set_polarity_porta(0xFF)
+        mcp.set_pullups_porta(0xff)
+        mcp.set_polarity_portb(0xFF)
+        mcp.set_pullups_portb(0xff)
+        mcp.set_default_value_porta(0xff)
+        mcp.set_default_value_portb(0xff)
+        mcp.enable_interrupt_porta(0xff)
+        mcp.enable_interrupt_portb(0xff)
+        mcp.mirror_port_interrupts()
+        try:
+            while True:
+                print(mcp.get_interrupt_source())
+                sleep(0.5)
+        except KeyboardInterrupt:
+            pass
