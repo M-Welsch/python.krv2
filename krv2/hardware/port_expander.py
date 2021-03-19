@@ -1,6 +1,10 @@
 from dataclasses import dataclass
-from math import log2
+from collections import namedtuple
+import logging
+from pathlib import Path
 from smbus2 import SMBus
+
+LOG = logging.getLogger(Path(__file__).name)
 
 
 class PortExpander:
@@ -59,6 +63,33 @@ class Dir:
     output: int = 0
 
 
+@dataclass
+class OutputValue:
+    high: int = 1
+    low: int = 0
+
+Pin = namedtuple("Pin","port bit name dir default pullup interrupt")
+
+
+Pins = {
+"GPB0": Pin(port="B", bit=0, name="enc0_sw", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB1": Pin(port="B", bit=1, name="enc1_sw", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB2": Pin(port="B", bit=2, name="button_back", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB3": Pin(port="B", bit=3, name="button_pause_play", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB4": Pin(port="B", bit=4, name="button_prev_song", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB5": Pin(port="B", bit=5, name="button_next_song", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB6": Pin(port="B", bit=6, name="button_shuffle_repeat", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPB7": Pin(port="B", bit=7, name="button_spare", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA0": Pin(port="A", bit=0, name="button_next_source", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA1": Pin(port="A", bit=1, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA2": Pin(port="A", bit=2, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA3": Pin(port="A", bit=3, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA4": Pin(port="A", bit=4, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA5": Pin(port="A", bit=5, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA6": Pin(port="A", bit=6, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+"GPA7": Pin(port="A", bit=7, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True)}
+
+
 class MCP23017:
     def __init__(self, address, pin_interface):
         self._pin_interface = pin_interface
@@ -69,19 +100,49 @@ class MCP23017:
         self._directions_b = 0
         self._int_en_a = 0
         self._int_en_b = 0
-        self._defvala = 0
-        self._defvalb = 0
+        self._local_defvala = 0
+        self._local_defvalb = 0
         self._intcona = 0
         self._intconb = 0
 
-    def set_polarity(self, polarity_porta: int, polarity_portb: int):
-        self.set_polarity_porta(polarity_porta)
-        self.set_polarity_portb(polarity_portb)
+    def setup_pe_defaults(self):
+        self._local_defvala, dir_register, int_register, pullup_register = self.get_defaults("A")
+        self.set_direction_porta(dir_register)
+        self.set_default_value_porta(self._local_defvala)
+        self.set_pullups_porta(pullup_register)
+        self.enable_interrupt_porta(int_register)
 
-    def set_polarity_porta(self, polarity: int):
+        self._local_defvalb, dir_register, int_register, pullup_register = self.get_defaults("B")
+        self.set_direction_portb(dir_register)
+        self.set_default_value_portb(self._local_defvalb)
+        self.set_pullups_portb(pullup_register)
+        self.enable_interrupt_portb(int_register)
+
+        self.mirror_port_interrupts()
+
+    @staticmethod
+    def get_defaults(port: str):
+        dir_register = 0
+        def_register = 0
+        pullup_register = 0
+        int_register = 0
+        for pin, props in Pins.items():
+            if props.port == port:
+                dir_register += props.dir << props.bit
+                def_register += props.default << props.bit
+                pullup_register += props.pullup << props.bit
+                int_register += props.interrupt << props.bit
+        print("defaults: ", def_register, dir_register, int_register, pullup_register)
+        return def_register, dir_register, int_register, pullup_register
+
+    def set_direction(self, polarity_porta: int, polarity_portb: int):
+        self.set_direction_porta(polarity_porta)
+        self.set_direction_portb(polarity_portb)
+
+    def set_direction_porta(self, polarity: int):
         self._write_byte_to_register(Registers.IODIRA, polarity)
 
-    def set_polarity_portb(self, polarity: int):
+    def set_direction_portb(self, polarity: int):
         self._write_byte_to_register(Registers.IODIRB, polarity)
 
     def set_pullups_porta(self, pullups: int):
@@ -91,9 +152,11 @@ class MCP23017:
         self._write_byte_to_register(Registers.GPPUB, pullups)
 
     def set_default_value_porta(self, default_value: int):
+        self._local_defvala = default_value
         self._write_byte_to_register(Registers.DEFVALA, default_value)
 
     def set_default_value_portb(self, default_value: int):
+        self._local_defvalb = default_value
         self._write_byte_to_register(Registers.DEFVALB, default_value)
 
     def enable_interrupt_porta(self, interrupt_mask: int):
@@ -113,21 +176,46 @@ class MCP23017:
         return self._read_byte_from_register(register=Registers.GPIOA), \
                self._read_byte_from_register(register=Registers.GPIOB)
 
-    def get_interrupt_source(self) -> list:
+    def get_interrupt_source(self) -> str:
         if self._pin_interface.pe_hmi_interrupt:
-            source = []
+            source = None
             intfa = self._read_byte_from_register(Registers.INTFA)
-            intcap = self._read_byte_from_register(Registers.INTCAPA)
-            source.extend(self.get_pin_from_byte(intfa, "GPA"))
-            intfb = self._read_byte_from_register(Registers.INTFB)
-            intcap = self._read_byte_from_register(Registers.INTCAPB)
-            source.extend(self.get_pin_from_byte(intfb, "GPB"))
+            intcapa = self._read_byte_from_register(Registers.INTCAPA)
+            source = self.get_pin_from_byte(intfa, "GPA")
+            if not source:
+                intfb = self._read_byte_from_register(Registers.INTFB)
+                intcapb = self._read_byte_from_register(Registers.INTCAPB)
+                source = self.get_pin_from_byte(intfb, "GPB")
             return source
-        else:
-            return []
 
-    @staticmethod
-    def get_pin_from_byte(byte, port: str) -> list:
+    def get_pin_from_byte(self, byte, port: str) -> str:
+        source = None
+        if byte & 128:
+            source = f"{port}7"
+        elif byte & 64:
+            source = f"{port}6"
+        elif byte & 32:
+            source = f"{port}5"
+        elif byte & 16:
+            source = f"{port}4"
+        elif byte & 8:
+            source = f"{port}3"
+        elif byte & 4:
+            source = f"{port}2"
+        elif byte & 2:
+            source = f"{port}1"
+        elif byte & 1:
+            source = f"{port}0"
+        return source
+
+    def get_pins_changed(self, input_register: int, port: str) -> list:
+        if port == "GPA":
+            defval = self._local_defvala
+        elif port == "GPB":
+            defval = self._local_defvalb
+        else:
+            raise ValueError(f"no such port as {port}")
+        byte = input_register ^ defval
         source = []
         if byte & 128:
             source.append(f"{port}7")
@@ -146,7 +234,6 @@ class MCP23017:
         if byte & 1:
             source.append(f"{port}0")
         return source
-
 
     def pin_setup(self, pin: str, direction: int, interrupt: bool=False, default_value: int = 1) -> None:
         pin_nr = int(pin[3])
@@ -188,7 +275,18 @@ class MCP23017:
             bus.write_byte_data(self._address, register, byte)
 
     def _read_byte_from_register(self, register):
-        with SMBus(1) as bus:
-            data = bus.read_byte_data(self._address, register)
+        try:
+            with SMBus(1) as bus:
+                data = bus.read_byte_data(self._address, register)
+        except OSError as e:
+            LOG.error("Port Expander not responding! {e}")
+            data = None
         return data
+
+    def _handle_i2c_error(self):
+        pass
+
+    def reset_pe(self):
+        self._pin_interface.reset_pe()
+        self._setup_pe_defaults()
 

@@ -50,9 +50,9 @@ class TestMCP23017:
 
     @staticmethod
     def test_input(mcp):
-        mcp.set_polarity_porta(0xFF)
+        mcp.set_direction_porta(0xFF)
         mcp.set_pullups_porta(0xff)
-        mcp.set_polarity_portb(0xFF)
+        mcp.set_direction_portb(0xFF)
         mcp.set_pullups_portb(0xff)
         try:
             while True:
@@ -63,18 +63,10 @@ class TestMCP23017:
 
     @staticmethod
     def test_interrupt(mcp):
-        mcp.set_polarity_porta(0xFF)
-        mcp.set_pullups_porta(0xff)
-        mcp.set_polarity_portb(0xFF)
-        mcp.set_pullups_portb(0xff)
-        mcp.set_default_value_porta(0xff)
-        mcp.set_default_value_portb(0xff)
-        mcp.enable_interrupt_porta(0xff)
-        mcp.enable_interrupt_portb(0xff)
-        mcp.mirror_port_interrupts()
+        mcp.setup_pe_defaults()
         try:
             while True:
                 print(mcp.get_interrupt_source())
-                sleep(0.5)
+                sleep(1)
         except KeyboardInterrupt:
             pass

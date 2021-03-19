@@ -1,9 +1,14 @@
+from time import sleep
 try:
     import RPi.GPIO as GPIO
 except ImportError:
     print("RPi.GPIO is not available. Switching to mockup mode")
     from mockups.mockupgpio import GPIO
 from collections import namedtuple
+import logging
+from pathlib import Path
+
+LOG = logging.getLogger(Path(__file__).name)
 
 
 class Pins:
@@ -16,8 +21,6 @@ class Pins:
         "b":26 # Pin 37
     }
     power = {
-        "bst_nshdn": 17, # Pin 11
-        "bst_npgood": 27, # Pin 13
         "en_front_usb_loadsw": 22, # Pin 15
         "nfault_front_usb_loadsw": 0 # Pin 27
     }
@@ -35,7 +38,7 @@ class PinInterface:
         gpio_mode = GPIO.BCM
         GPIO.setmode(gpio_mode)
         self._setup_buttons()
-        self._setup_encoder_pins()
+        # self._setup_encoder_pins()
         self._setup_internal_signals()
 
     @staticmethod
@@ -63,4 +66,11 @@ class PinInterface:
     def hmi_ninta(self):
         return GPIO.input(Pins.pe["hmi_ninta"])
 
+    def reset_pe(self):
+        LOG.info("Resetting Port Expanders")
+        GPIO.output(Pins.pe["nrst"], GPIO.LOW)
+        sleep(0.1)
+        GPIO.output(Pins.pe["nrst"], GPIO.HIGH)
 
+    def cleanup(self):
+        GPIO.cleanup()
