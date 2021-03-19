@@ -2,14 +2,22 @@ import logging
 from datetime import datetime
 from pathlib import Path
 import json
-from hmi import HumanMachineInterface
+import sys, os
+
+path_to_module = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(path_to_module)
+print(path_to_module)
+
+from krv2.hardware.pin_interface import PinInterface
+from krv2.hmi import HumanMachineInterface
 
 LOG = logging.getLogger(Path(__file__).name)
 
 
 class Krv2:
     def __init__(self):
-        HumanMachineInterface()
+        pin_interface = PinInterface()
+        HumanMachineInterface(pin_interface)
         self._setup_logger()
 
     def _setup_logger(self):

@@ -87,7 +87,7 @@ Pins = {
 "GPA4": Pin(port="A", bit=4, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
 "GPA5": Pin(port="A", bit=5, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
 "GPA6": Pin(port="A", bit=6, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-"GPA7": Pin(port="A", bit=7, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True)}
+"GPA7": Pin(port="A", bit=7, name="button_exit", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True)}
 
 
 class MCP23017:
@@ -119,6 +119,37 @@ class MCP23017:
         self.enable_interrupt_portb(int_register)
 
         self.mirror_port_interrupts()
+
+    def poll(self) -> list:
+        low_values = []
+        pressed_buttons = []
+        if self._pin_interface.pe_hmi_interrupt:
+            input_register_a, input_register_b = self.read_input()
+            low_values.extend(self._get_names_of_low_pins(input_register_a, "A"))
+            low_values.extend(self._get_names_of_low_pins(input_register_b, "B"))
+            for low_value in low_values:
+                pressed_buttons.append(Pins[low_value].name)
+        return pressed_buttons
+
+    def _get_names_of_low_pins(self, register, port) -> list:
+        value = []
+        if register & 128 == 0:
+            value.append(f"GP{port}7")
+        if register & 64 == 0:
+            value.append(f"GP{port}6")
+        if register & 32 == 0:
+            value.append(f"GP{port}5")
+        if register & 16 == 0:
+            value.append(f"GP{port}4")
+        if register & 8 == 0:
+            value.append(f"GP{port}3")
+        if register & 4 == 0:
+            value.append(f"GP{port}2")
+        if register & 2 == 0:
+            value.append(f"GP{port}1")
+        if register & 1 == 0:
+            value.append(f"GP{port}0")
+        return value
 
     @staticmethod
     def get_defaults(port: str):
@@ -235,41 +266,6 @@ class MCP23017:
             source.append(f"{port}0")
         return source
 
-    def pin_setup(self, pin: str, direction: int, interrupt: bool=False, default_value: int = 1) -> None:
-        pin_nr = int(pin[3])
-        if pin.startswith("GPA"):
-            self._manipulate_local_register(Registers.IODIRA, self._directions_a, pin_nr, direction)
-            if interrupt:
-                self._manipulate_local_register(Registers.GPINTENA, self._int_en_a, pin_nr, 1)
-                self._manipulate_local_register(Registers.DEFVALA, self._defvala, pin_nr, default_value)
-                self._manipulate_local_register(Registers.INTCONA, self._intcona, pin_nr, 1)
-        elif pin.startswith("GPB"):
-            self._manipulate_local_register(Registers.IODIRB, self._directions_b, pin_nr, direction)
-        else:
-            raise ValueError
-
-    def all_inputs(self):
-        self._write_byte_to_register(Registers.IODIRA, 0xFF)
-        self._write_byte_to_register(Registers.IODIRB, 0xFF)
-
-    def pin_output(self, pin: str, value: int):
-        pin_nr = int(pin[3])
-        if pin.startswith("GPA"):
-            self._manipulate_local_register(Registers.OLATA, self._output_a, pin_nr, value)
-        elif pin.startswith("GPB"):
-            self._manipulate_local_register(Registers.OLATB, self._output_b, pin_nr, value)
-        else:
-            raise ValueError(f"Pin designators should be within GPA0-7 or GPB0-7. Received {pin} ")
-
-    def _manipulate_local_register(self, register_ic, register_content_local_mirror, pin_nr, value):
-        if value == 1:
-            register_content_local_mirror = register_content_local_mirror | (1 << pin_nr)
-        elif value == 0:
-            register_content_local_mirror = register_content_local_mirror & ~(1 << pin_nr)
-        else:
-            raise ValueError("Pin output states are 0 or 1")
-        self._write_byte_to_register(register_ic, register_content_local_mirror)
-
     def _write_byte_to_register(self, register, byte):
         with SMBus(1) as bus:
             bus.write_byte_data(self._address, register, byte)
@@ -280,13 +276,15 @@ class MCP23017:
                 data = bus.read_byte_data(self._address, register)
         except OSError as e:
             LOG.error("Port Expander not responding! {e}")
+            self._handle_i2c_error()
             data = None
         return data
 
     def _handle_i2c_error(self):
-        pass
+        self.reset_pe()
+        self._setup_pe_defaults()
 
     def reset_pe(self):
         self._pin_interface.reset_pe()
-        self._setup_pe_defaults()
+
 

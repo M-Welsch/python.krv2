@@ -70,3 +70,13 @@ class TestMCP23017:
                 sleep(1)
         except KeyboardInterrupt:
             pass
+
+    @staticmethod
+    def test_poll(mcp):
+        mcp.setup_pe_defaults()
+        try:
+            while True:
+                print(mcp.poll())
+                sleep(0.5)
+        except KeyboardInterrupt:
+            pass
