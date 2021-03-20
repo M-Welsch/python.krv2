@@ -1,5 +1,16 @@
-import pycmus
+from pycmus import remote
 from dataclasses import dataclass
+
+
+"""
+IMPORTANT!!
+
+when pycmus is used as root, it won't find the default socket path, so it has to be provided.
+make sure, cmus itself is being started with
+
+$ cmus --listen /home/pi/.config/cmus/socket
+(or whatever the path to the socket file shall be)
+"""
 
 
 @dataclass
@@ -16,21 +27,10 @@ class PlayScope:
     album: str = "album"
 
 
-class CmusWrapper():
+class CmusWrapper:
     def __init__(self):
-        self._playing = False
+        socket_path = "/home/pi/.config/cmus/socket"
+        self._remote = remote.PyCmus(socket_path)
 
-    def pause_playback(self):
-        pass
-
-    def resume_playback(self):
-        pass
-
-    def next_track(self):
-        pass
-
-    def previous_track(self):
-        pass
-
-    def set_playmode(self, mode: str):
-        pass
+    def get_status_dict(self) -> dict:
+        return self._remote.get_status_dict()
