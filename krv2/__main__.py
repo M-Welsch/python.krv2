@@ -9,7 +9,7 @@ sys.path.append(path_to_module)
 
 from krv2.hardware.pin_interface import PinInterface
 from krv2.hardware.hmi import HumanMachineInterface
-from krv2.cmus.cmus_wrapper import CmusWrapper
+from krv2.music_player.cmus_wrapper import CmusWrapper
 
 LOG = logging.getLogger(Path(__file__).name)
 

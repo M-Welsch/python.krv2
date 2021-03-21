@@ -1,3 +1,4 @@
+from getpass import getuser
 from subprocess import Popen, PIPE
 
 
@@ -6,7 +7,11 @@ class CmusProcess:
         self._process = None
 
     def start(self):
-        cmd = "cmus --listen /home/pi/.config/cmus/socket".split()
+        if getuser() == 'root':
+            socket_path = "/root/.cmus/socket"
+        else:
+            socket_path = "/home/pi/.config/cmus/socket"  # not sure whether this actually works
+        cmd = f"cmus --listen {socket_path}".split()
         self._process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1)
 
     def write(self, message):

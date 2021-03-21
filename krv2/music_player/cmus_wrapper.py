@@ -6,9 +6,9 @@ from dataclasses import dataclass
 IMPORTANT!!
 
 when pycmus is used as root, it won't find the default socket path, so it has to be provided.
-make sure, cmus itself is being started with
+make sure, music_player itself is being started with
 
-$ cmus --listen /home/pi/.config/cmus/socket
+$ music_player --listen /home/pi/.config/music_player/socket
 (or whatever the path to the socket file shall be)
 """
 
@@ -30,7 +30,7 @@ class PlayScope:
 class CmusWrapper:
     def __init__(self):
         socket_path = "/home/pi/.config/cmus/socket"
-        self._remote = remote.PyCmus(socket_path)
+        self._remote = remote.PyCmus()
 
     def get_status_dict(self) -> dict:
         return self._remote.get_status_dict()
