@@ -5,12 +5,12 @@ path_to_module = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath
 sys.path.append(path_to_module)
 print(path_to_module)
 
-from krv2.hardware.display import Display
+from krv2.hardware.displays import Displays
 
 @pytest.fixture
 def display():
-    yield Display()
+    yield Displays()
 
 
 def test_display_init(display):
-    display.run_for_fun()
+    display.write_teststuff_to_displays()
