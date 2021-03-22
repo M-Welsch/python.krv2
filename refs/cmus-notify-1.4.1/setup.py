@@ -17,11 +17,11 @@ def get_long_description(file_name: str) -> str:
 
 if __name__ == '__main__':
     setup(
-        name='cmus-notify',
+        name='music_player-notify',
         version='1.4.1',
         description='A package for displaying Cmus current status in notifications',
         author='Antoine Gagne',
-        keywords='utilities application cli hook cmus notifications',
+        keywords='utilities application cli hook music_player notifications',
         author_email='antoine.gagne.2@ulaval.ca',
         url='https://github.com/AntoineGagne/cmus-notify',
         packages=['cmus_notify'],

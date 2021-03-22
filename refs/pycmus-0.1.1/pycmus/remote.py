@@ -31,14 +31,14 @@ class PyCmus(object):
     """PyCmus remote class
 
     This class is used to create a PyCmus remote object that is used to send
-    commands to a running cmus. It can be used to connect to either a locally
-    running cmus or a cmus on a remote machine that is configured to listen
+    commands to a running music_player. It can be used to connect to either a locally
+    running music_player or a music_player on a remote machine that is configured to listen
     over the network. If neither a server or a socket file are provided the
-    PyCmus object will look for a running cmus in the default locations and
+    PyCmus object will look for a running music_player in the default locations and
     try to connect to that.
 
-    :param str server: The remote host to connect to the cmus socket on
-    :param str socket_path: The path to the local unix socket for cmus
+    :param str server: The remote host to connect to the music_player socket on
+    :param str socket_path: The path to the local unix socket for music_player
     :param str password: The password to use when establishing a remote
                          connection. It is a required field if a server is
                          provided. If a socket_path is used this is ignored
@@ -84,19 +84,19 @@ class PyCmus(object):
             return socket_path
         if "CMUS_HOME" in os.environ:
             conf_dir = os.environ["CMUS_HOME"]
-        elif os.path.isdir(os.path.join(os.path.expanduser('~'), '.cmus')):
-            conf_dir = os.path.join(os.path.expanduser('~'), '.cmus')
+        elif os.path.isdir(os.path.join(os.path.expanduser('~'), '.music_player')):
+            conf_dir = os.path.join(os.path.expanduser('~'), '.music_player')
         elif "XDG_CONFIG_HOME" in os.environ:
             if os.path.isdir(os.path.join(os.environ['XDG_CONFIG_HOME'],
-                                          'cmus')):
-                conf_dir = os.path.join(os.environ["XDG_CONFIG_HOME"], 'cmus')
+                                          'music_player')):
+                conf_dir = os.path.join(os.environ["XDG_CONFIG_HOME"], 'music_player')
         elif os.path.isdir(os.path.join(os.path.expanduser('~'), '.config',
-                                        'cmus')):
-            conf_dir = os.path.join(os.path.expanduser('~'), '.config', 'cmus')
+                                        'music_player')):
+            conf_dir = os.path.join(os.path.expanduser('~'), '.config', 'music_player')
 
         else:
-            os.mkdir(os.path.join(os.path.expanduser('~'), '.cmus'))
-            conf_dir = os.path.join(os.path.expanduser('~'), '.cmus')
+            os.mkdir(os.path.join(os.path.expanduser('~'), '.music_player'))
+            conf_dir = os.path.join(os.path.expanduser('~'), '.music_player')
         return conf_dir
 
     def _get_socket_path(self, socket_path=None):
@@ -105,16 +105,16 @@ class PyCmus(object):
         else:
             if "XDG_RUNTIME_DIR" in os.environ:
                 return os.path.join(os.environ["XDG_RUNTIME_DIR"],
-                                    "cmus-socket")
+                                    "music_player-socket")
             else:
                 conf_dir = self._get_cmus_conf_dir(socket_path)
                 return os.path.join(conf_dir, 'socket')
 
     def send_cmd(self, cmd):
-        """Send a raw command to cmus
+        """Send a raw command to music_player
 
-        :param str cmd: The command to send to cmus
-        :return resp: The response from cmus from the issued command
+        :param str cmd: The command to send to music_player
+        :return resp: The response from music_player from the issued command
         :rtype: str
         """
 

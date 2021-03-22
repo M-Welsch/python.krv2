@@ -10,6 +10,7 @@ sys.path.append(path_to_module)
 from krv2.hardware.pin_interface import PinInterface
 from krv2.hardware.hmi import HumanMachineInterface
 from krv2.music_player.cmus_wrapper import CmusWrapper
+from krv2.music_player.cmus_process import CmusProcess
 
 LOG = logging.getLogger(Path(__file__).name)
 
@@ -18,6 +19,7 @@ class Krv2:
     def __init__(self):
         pin_interface = PinInterface()
         hmi = HumanMachineInterface(pin_interface)
+        cmus_process = CmusProcess().start()
         cmus_wrapper = CmusWrapper()
         self._setup_logger()
 

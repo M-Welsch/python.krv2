@@ -69,7 +69,7 @@ latex_documents = [
      u'Matthew Treinish', 'manual'),
 ]
 
-man_pages = [('pycmus', 'pycmus', 'A python cmus remote library',
+man_pages = [('pycmus', 'pycmus', 'A python music_player remote library',
              ['Matthew Treinish'], 1)]
 
 # Example configuration for intersphinx: refer to the Python standard library.

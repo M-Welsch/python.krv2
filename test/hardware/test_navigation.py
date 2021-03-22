@@ -19,8 +19,7 @@ class TestHmi:
     @staticmethod
     def test_navigation(hmi):
         print("Rotate the Encoder Up and down. Exit with ctrl+c")
-        try:
-            while True:
-                sleep(0.1)
-        except KeyboardInterrupt:
-            pass
+
+    @staticmethod
+    def test_list_artists(hmi):
+        assert type(hmi._nav.list_artists()) == list

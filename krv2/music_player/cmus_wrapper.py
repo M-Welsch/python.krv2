@@ -1,6 +1,12 @@
+from pathlib import Path
 from pycmus import remote
 from dataclasses import dataclass
+from time import time, sleep
+import logging
 
+from krv2.common.exceptions import CmusException
+
+LOG = logging.getLogger(Path(__file__).name)
 
 """
 IMPORTANT!!
@@ -29,8 +35,15 @@ class PlayScope:
 
 class CmusWrapper:
     def __init__(self):
-        socket_path = "/home/pi/.config/cmus/socket"
-        self._remote = remote.PyCmus()
+        socket_path = Path("/home/pi/.config/cmus/socket")
+        start = time()
+        while not socket_path.exists() and time()-start < 10:
+            sleep(0.01)
+        try:
+            self._remote = remote.PyCmus()
+        except FileNotFoundError:
+            LOG.error(f"Could not connect to cmus on socket: {socket_path}")
+            raise CmusException(f"Could not connect to cmus on socket: {socket_path}")
 
     def get_status_dict(self) -> dict:
         return self._remote.get_status_dict()
