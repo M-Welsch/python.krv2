@@ -14,6 +14,7 @@ class HumanInterfaceDevice(threading.Thread):
     enc0_value_changed = Signal()
     enc1_value_changed = Signal()
     enc0_sw_pressed = Signal()
+    button_back_pressed = Signal()
 
     def __init__(self, pin_interface):
         super().__init__()
@@ -39,6 +40,8 @@ class HumanInterfaceDevice(threading.Thread):
                 self._exitflag = True
             if "enc0_sw" in buttons:
                 self.enc0_sw_pressed.emit()
+            if "button_back" in buttons:
+                self.button_back_pressed.emit()
             print(f"buttons_pressed: {buttons}, encoder 0: {self.enc0_value}, encoder 1: {self.enc1_value}")
             sleep(0.5)
             if "button_exit" in buttons:

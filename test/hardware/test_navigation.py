@@ -22,4 +22,4 @@ class TestHmi:
 
     @staticmethod
     def test_list_artists(hmi):
-        assert type(hmi._nav.list_artists()) == list
+        assert type(hmi._nav.list_rootdir_contents()) == list
