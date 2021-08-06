@@ -23,3 +23,7 @@ class TestCmusWrapper:
     def test_get_status_dict(cmus_wrapper):
         status_dict = cmus_wrapper.get_status_dict()
         print(status_dict)
+
+    @staticmethod
+    def test_clear_playlist(cmus_wrapper):
+        cmus_wrapper.clear_playlist()

@@ -2,6 +2,7 @@ from signalslot import Signal
 from pathlib import Path
 import json
 
+
 class Navigation:
     refresh_nav_display = Signal()
     play_all_str = "< play all >"
@@ -48,18 +49,18 @@ class Navigation:
         else:
             return self._current_navigation_layer[0:max_index]
 
-    def on_env_val_changed(self, diff, **kwargs):
-        if diff > 0:
-            self._nav_down()
-        if diff < 0:
-            self._nav_up()
+    def on_nav_up_down(self, amount, **kwargs):
+        if amount > 0:
+            self.down()
+        if amount < 0:
+            self.up()
         self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
         self.refresh_nav_display.emit()
 
     def on_enc0_pressed(self, **kwargs):
         print(f"self.path_from_cursor(): {self.path_from_cursor()}, type(self.path_from_cursor()): {type(self.path_from_cursor())}")
         if self.path_from_cursor().is_dir():
-            self._nav_into()
+            self.into()
         elif self.path_from_cursor().is_file():
             self.play_selection()
         elif self.cursor_text == self.play_all_str:
@@ -67,19 +68,19 @@ class Navigation:
 
     def on_button_back_pressed(self, **kwargs):
         if not self._current_path == self._lib_path:
-            self._nav_out()
+            self.out()
 
-    def _nav_down(self):
+    def down(self):
         new_index = self.limit(self._cursor - 1, 0, len(self._current_navigation_layer) - 1)
         print(f"updating seletion to {new_index} with content {self._current_navigation_layer[new_index]}")
         self._cursor = new_index
 
-    def _nav_up(self):
+    def up(self):
         new_index = self.limit(self._cursor + 1, 0, len(self._current_navigation_layer) - 1)
         print(f"updating seletion to {new_index} with content {self._current_navigation_layer[new_index]}")
         self._cursor = new_index
 
-    def _nav_into(self):
+    def into(self):
         self._current_path = self.path_from_cursor()
         path_from_cursor = self.path_from_cursor()
         print(f"navigating into {path_from_cursor}")
@@ -88,7 +89,7 @@ class Navigation:
         self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
         self.refresh_nav_display.emit()
 
-    def _nav_out(self):
+    def out(self):
         recent_path = self._current_path
         self._current_path = self._current_path.parent
         self._current_navigation_layer = self.content(self._current_path)
