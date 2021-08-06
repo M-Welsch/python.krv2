@@ -5,10 +5,11 @@ import json
 import sys
 import os
 from platform import machine
-from signalslot import Signal
 
 path_to_module = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(path_to_module)
+
+from krv2.hmi.logic import Logic
 
 LOG = logging.getLogger(__name__)
 
@@ -33,9 +34,10 @@ if __name__ == '__main__':
         h = Hmi()
     elif machine() == 'x86_64':
         print("Laptop")
-        from krv2.hmi.hmi_mockup import HmiMockup
-        h = HmiMockup()
+        from krv2.hmi.hmi_mockup import Hmi
+        h = Hmi()
     else:
         raise ValueError("I don't know who I am!")
-    h.connect_signals()
-    h.start()
+    Logic(hmi=h)
+
+# create symlink for mockup: sudo ln -s /home/max/Music /home/pi

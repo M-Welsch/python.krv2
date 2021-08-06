@@ -24,7 +24,7 @@ class Navigation:
 
     @staticmethod
     def _get_lib_path() -> Path:
-        with open(Path.cwd()/"config.json", "r") as cf:
+        with open(Path.cwd()/"python.krv2/krv2/config.json", "r") as cf:
             return Path(json.load(cf)["Music"]["lib_path"])
 
     @property
@@ -49,14 +49,6 @@ class Navigation:
         else:
             return self._current_navigation_layer[0:max_index]
 
-    def on_nav_up_down(self, amount, **kwargs):
-        if amount > 0:
-            self.down()
-        if amount < 0:
-            self.up()
-        self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
-        self.refresh_nav_display.emit()
-
     def on_enc0_pressed(self, **kwargs):
         print(f"self.path_from_cursor(): {self.path_from_cursor()}, type(self.path_from_cursor()): {type(self.path_from_cursor())}")
         if self.path_from_cursor().is_dir():
@@ -65,10 +57,6 @@ class Navigation:
             self.play_selection()
         elif self.cursor_text == self.play_all_str:
             print("Play all. Partymode!")
-
-    def on_button_back_pressed(self, **kwargs):
-        if not self._current_path == self._lib_path:
-            self.out()
 
     def down(self):
         new_index = self.limit(self._cursor - 1, 0, len(self._current_navigation_layer) - 1)
@@ -90,17 +78,18 @@ class Navigation:
         self.refresh_nav_display.emit()
 
     def out(self):
-        recent_path = self._current_path
-        self._current_path = self._current_path.parent
-        self._current_navigation_layer = self.content(self._current_path)
-        self._cursor = 0
-        count = 0
-        for item in self._current_navigation_layer:
-            if str(item) == str(recent_path.relative_to(self._current_path)):
-                self._cursor = count
-            count += 1
-        self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
-        self.refresh_nav_display.emit()
+        if not self._current_path == self._lib_path:
+            recent_path = self._current_path
+            self._current_path = self._current_path.parent
+            self._current_navigation_layer = self.content(self._current_path)
+            self._cursor = 0
+            count = 0
+            for item in self._current_navigation_layer:
+                if str(item) == str(recent_path.relative_to(self._current_path)):
+                    self._cursor = count
+                count += 1
+            self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
+            self.refresh_nav_display.emit()
 
     def play_selection(self):
         print("Playing selection!")

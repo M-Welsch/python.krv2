@@ -2,17 +2,9 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtGui import QPixmap
 import sys
 from signalslot import Signal
-from enum import Enum
-
-from krv2.hmi.navigation import Navigation
 
 
-class States(Enum):
-    mode_selection = 0
-    navigation = 1
-
-
-class HmiMockup:
+class Hmi:
     def __init__(self):
         self._app = QtWidgets.QApplication(sys.argv)
         self._window = Ui()
@@ -21,32 +13,9 @@ class HmiMockup:
         self.enc1 = self._window.enc1
         self.enc1_sw = self._window.enc1_sw
         self.button = self._window.button
-        self._navigation = Navigation()
-        self._state = States.navigation
-
-    def connect_signals(self):
-        self.enc0.connect(self.on_enc_movement)
-        self.enc0_sw.connect(self.on_enc0_sw_pressed)
-        self.button.connect(self.on_button_pressed)
 
     def start(self):
         self._app.exec_()
-
-    def on_enc_movement(self, amount, **kwargs):
-        if self._state == States.navigation:
-            if amount < 0:
-                self._navigation.up()
-            elif amount > 0:
-                self._navigation.down()
-
-    def on_enc0_sw_pressed(self, **kwargs):
-        if self._state == States.navigation:
-            self._navigation.into()
-
-    def on_button_pressed(self, name, **kwargs):
-        if self._state == States.navigation:
-            if name == "button_back":
-                self._navigation.out()
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -58,7 +27,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('mockups/frontplate_conf.ui', self)
+        uic.loadUi('python.krv2/krv2/mockups/frontplate_conf.ui', self)
 
         self.pb_Source = self.findChild(QtWidgets.QPushButton, 'PB_Source')
         self.pb_PausePlay = self.findChild(QtWidgets.QPushButton, 'PB_PausePlay')
