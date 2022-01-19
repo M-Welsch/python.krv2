@@ -1,8 +1,93 @@
 from signalslot import Signal
 from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict, Union, Type, List, Callable
+
+import mishmash.orm.core as mc
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, Numeric, Table, Text, create_engine
+from sqlalchemy.sql.sqltypes import NullType
+from sqlalchemy.orm import relationship, sessionmaker, session
+from sqlalchemy.ext.declarative import declarative_base
+
+from krv2.music_collection import Database
+
+
+class ContentElement:
+    pass
+
+
+PREPENDED_COMMANDS = ["<play all>"]
+
+
+class CommandElement(ContentElement):
+    def __init__(self, cmd: str):
+        self.cmd: str = cmd
+
+
+class DatabaseElement(ContentElement):
+    def __init__(self, name: str):
+        self.name = name
+
+
+class Content:
+    def __init__(self, elements: List[ContentElement]):
+        self.elements: List[ContentElement] = [CommandElement(cmd=cmd) for cmd in PREPENDED_COMMANDS]
+        self.elements.extend(elements)
+        self.type = Type
+        self.size: int = len(self.elements)
+
+    def __repr__(self) -> str:
+        complete_list = [element.cmd for element in self.elements if isinstance(element, CommandElement)]
+        complete_list.extend([element.name for element in self.elements if isinstance(element, DatabaseElement)])
+        return "\n".join(complete_list)
+
 
 class Navigation:
+    def __init__(self, nav_config: dict, db: Database):
+        self._db: Database = db
+        self._slice_size = nav_config.get("slice_size", 5)
+        self._content = self._load_artists(self._db.load_artist_names)
+        self._cursor: int = 0
+        self._slice_range: list = self._update_list_slice()
+
+    @staticmethod
+    def _load_artists(load_artist_names: Callable) -> Content:
+        artist_names = load_artist_names()
+        elements = [DatabaseElement(name=artist_name) for artist_name in artist_names]
+        return Content(elements=elements)
+
+    def _update_list_slice(self) -> List[int]:
+        cursor = self._cursor
+        slice_size = self._slice_size
+        maximum = self._content.size
+
+        if maximum < self._slice_size:
+            return list(range(slice_size))
+        if cursor < 3:
+            return list(range(slice_size))
+        elif cursor > (maximum - 3):
+            return list(range(maximum-slice_size, maximum))
+        else:
+            return list(range(cursor-2, cursor+3))
+
+    def up(self):
+        self._cursor += 1
+        self._update_list_slice()
+
+    def down(self):
+        self._cursor -= 1
+        self._update_list_slice()
+
+    def into(self):
+        ...
+
+    def out(self):
+        ...
+
+
+class Navigation_:
     refresh_nav_display = Signal()
     play_all_str = "< play all >"
 
