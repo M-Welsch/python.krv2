@@ -44,6 +44,7 @@ class Content:
         return "\n".join(complete_list)
 
 
+
 class Navigation:
     def __init__(self, nav_config: dict, db: Database):
         self._db: Database = db
@@ -108,7 +109,7 @@ class Navigation_:
 
     @staticmethod
     def _get_lib_path() -> Path:
-        with open(Path.cwd()/"config.json", "r") as cf:
+        with open(Path.cwd()/"python.krv2/krv2/config.json", "r") as cf:
             return Path(json.load(cf)["Music"]["lib_path"])
 
     @property
@@ -133,38 +134,26 @@ class Navigation_:
         else:
             return self._current_navigation_layer[0:max_index]
 
-    def on_env_val_changed(self, diff, **kwargs):
-        if diff > 0:
-            self._nav_down()
-        if diff < 0:
-            self._nav_up()
-        self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
-        self.refresh_nav_display.emit()
-
     def on_enc0_pressed(self, **kwargs):
         print(f"self.path_from_cursor(): {self.path_from_cursor()}, type(self.path_from_cursor()): {type(self.path_from_cursor())}")
         if self.path_from_cursor().is_dir():
-            self._nav_into()
+            self.into()
         elif self.path_from_cursor().is_file():
             self.play_selection()
         elif self.cursor_text == self.play_all_str:
             print("Play all. Partymode!")
 
-    def on_button_back_pressed(self, **kwargs):
-        if not self._current_path == self._lib_path:
-            self._nav_out()
-
-    def _nav_down(self):
+    def down(self):
         new_index = self.limit(self._cursor - 1, 0, len(self._current_navigation_layer) - 1)
         print(f"updating seletion to {new_index} with content {self._current_navigation_layer[new_index]}")
         self._cursor = new_index
 
-    def _nav_up(self):
+    def up(self):
         new_index = self.limit(self._cursor + 1, 0, len(self._current_navigation_layer) - 1)
         print(f"updating seletion to {new_index} with content {self._current_navigation_layer[new_index]}")
         self._cursor = new_index
 
-    def _nav_into(self):
+    def into(self):
         self._current_path = self.path_from_cursor()
         path_from_cursor = self.path_from_cursor()
         print(f"navigating into {path_from_cursor}")
@@ -173,18 +162,19 @@ class Navigation_:
         self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
         self.refresh_nav_display.emit()
 
-    def _nav_out(self):
-        recent_path = self._current_path
-        self._current_path = self._current_path.parent
-        self._current_navigation_layer = self.content(self._current_path)
-        self._cursor = 0
-        count = 0
-        for item in self._current_navigation_layer:
-            if str(item) == str(recent_path.relative_to(self._current_path)):
-                self._cursor = count
-            count += 1
-        self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
-        self.refresh_nav_display.emit()
+    def out(self):
+        if not self._current_path == self._lib_path:
+            recent_path = self._current_path
+            self._current_path = self._current_path.parent
+            self._current_navigation_layer = self.content(self._current_path)
+            self._cursor = 0
+            count = 0
+            for item in self._current_navigation_layer:
+                if str(item) == str(recent_path.relative_to(self._current_path)):
+                    self._cursor = count
+                count += 1
+            self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
+            self.refresh_nav_display.emit()
 
     def play_selection(self):
         print("Playing selection!")

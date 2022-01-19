@@ -22,6 +22,10 @@ class HumanMachineInterface:
         self._connect_signals()
         self.on_refresh_nav_display()
 
+    @property
+    def nav(self):
+        return self._nav
+
     def _connect_signals(self):
         self._hid.enc0_value_changed.connect(self._nav.on_env_val_changed)
         self._nav.refresh_nav_display.connect(self.on_refresh_nav_display)
@@ -44,6 +48,8 @@ class HumanMachineInterface:
 
 
 class Navigation:
+    play_url = Signal()
+    play_all_within_dir = Signal()
     refresh_nav_display = Signal()
     play_all_str = "< play all >"
 
@@ -103,9 +109,11 @@ class Navigation:
         if self.path_from_cursor().is_dir():
             self._nav_into()
         elif self.path_from_cursor().is_file():
-            self.play_selection()
+            self.play_selected_item()
         elif self.cursor_text == self.play_all_str:
-            print("Play all. Partymode!")
+            print(f"Partymode! Play all within {self._current_path}")
+            self.play_all_within_dir.emit(url=self._current_path)
+
 
     def on_button_back_pressed(self, **kwargs):
         if not self._current_path == self._lib_path:
@@ -143,7 +151,8 @@ class Navigation:
         self._current_navigation_display_slice = self._update_list_slice(self._current_navigation_layer, self._cursor)
         self.refresh_nav_display.emit()
 
-    def play_selection(self):
+    def play_selected_item(self):
+        self.play_url.emit(url=self.path_from_cursor())
         print("Playing selection!")
 
     @staticmethod

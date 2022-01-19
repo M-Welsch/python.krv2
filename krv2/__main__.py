@@ -2,38 +2,42 @@ import logging
 from datetime import datetime
 from pathlib import Path
 import json
-import sys, os
+import sys
+import os
+from platform import machine
 
 path_to_module = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(path_to_module)
 
-from krv2.hardware.pin_interface import PinInterface
-from krv2.hardware.hmi import HumanMachineInterface
-from krv2.music_player.cmus_wrapper import CmusWrapper
-from krv2.music_player.cmus_process import CmusProcess
+from krv2.hmi.logic import Logic
 
-LOG = logging.getLogger(Path(__file__).name)
+LOG = logging.getLogger(__name__)
 
 
-class Krv2:
-    def __init__(self):
-        pin_interface = PinInterface()
-        hmi = HumanMachineInterface(pin_interface)
-        cmus_process = CmusProcess().start()
-        cmus_wrapper = CmusWrapper()
-        self._setup_logger()
+def setup_logger() -> None:
+    with open(Path(path_to_module)/"krv2"/"config.json", "r") as file:
+        logs_directory = json.load(file)["Logging"]["logs_directory"]
 
-    def _setup_logger(self):
-        with open(Path(path_to_module)/"krv2"/"config.json", "r") as file:
-            logs_directory = json.load(file)["Logging"]["logs_directory"]
-
-        logging.basicConfig(
-            filename=Path(path_to_module)/"krv2"/Path(logs_directory) / datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'),
-            level=logging.DEBUG,
-            format='%(asctime)s %(levelname)s: %(name)s: %(message)s',
-            datefmt='%m.%d.%Y %H:%M:%S'
-        )
+    logging.basicConfig(
+        filename=Path(path_to_module)/"krv2"/Path(logs_directory) / datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'),
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s: %(name)s: %(message)s',
+        datefmt='%m.%d.%Y %H:%M:%S'
+    )
 
 
 if __name__ == '__main__':
-    Krv2()
+    setup_logger()
+    if machine() == 'armv7l':
+        print("Raspi")
+        from krv2.hmi.hmi import Hmi
+        h = Hmi()
+    elif machine() == 'x86_64':
+        print("Laptop")
+        from krv2.hmi.hmi_mockup import Hmi
+        h = Hmi()
+    else:
+        raise ValueError("I don't know who I am!")
+    Logic(hmi=h)
+
+# create symlink for mockup: sudo ln -s /home/max/Music /home/pi

@@ -1,41 +1,38 @@
-from luma.core.render import canvas
-import logging
-from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from enum import Enum
 
-from krv2.hardware.displays import Displays
-from krv2.hardware.hid import HumanInterfaceDevice
-
-LOG = logging.getLogger(Path(__file__).name)
+from krv2.hmi.navigation import Navigation
 
 
-class HumanMachineInterface:
+class States(Enum):
+    mode_selection = 0
+    navigation = 1
 
-    def __init__(self, pin_interface):
-        self._hid = HumanInterfaceDevice(pin_interface)
-        self._hid.start()
-        displays = Displays()
-        self._nav_display: ImageDraw.Draw = displays.dis1
-        self._nav = Navigation(nav_display=displays.dis1)
-        self._connect_signals()
-        self.on_refresh_nav_display()
 
-    def _connect_signals(self):
-        self._hid.enc0_value_changed.connect(self._nav.on_env_val_changed)
-        self._nav.refresh_nav_display.connect(self.on_refresh_nav_display)
-        self._hid.enc0_sw_pressed.connect(self._nav.on_enc0_pressed)
-        self._hid.button_back_pressed.connect(self._nav.on_button_back_pressed)
+class Logic:
+    def __init__(self, hmi):
+        self._hmi = hmi
+        self._navigation = Navigation()
+        self._state = States.navigation
+        self.connect_signals()
+        self._hmi.start()
 
-    def on_refresh_nav_display(self, **kwargs):
-        fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)
-        with canvas(self._nav_display) as nav_display:
-            posy = 0
-            for line in self._nav.current_slice_of_dir_content:
-                line = str(line)
-                if line == self._nav.cursor_text:
-                    self._place_cursor(nav_display, posy)
-                nav_display.text((5, posy), line, fill="white", font=fnt)
-                posy += 11
+    def connect_signals(self):
+        self._hmi.enc0.connect(self.on_enc_movement)
+        self._hmi.enc0_sw.connect(self.on_enc0_sw_pressed)
+        self._hmi.button.connect(self.on_button_pressed)
 
-    def _place_cursor(self, nav_display, posy):
-        nav_display.rectangle(xy=[0, posy + 4, 2, posy + 6], fill="white")
+    def on_enc_movement(self, amount, **kwargs):
+        if self._state == States.navigation:
+            if amount < 0:
+                self._navigation.up()
+            elif amount > 0:
+                self._navigation.down()
+
+    def on_enc0_sw_pressed(self, **kwargs):
+        if self._state == States.navigation:
+            self._navigation.into()
+
+    def on_button_pressed(self, name, **kwargs):
+        if self._state == States.navigation:
+            if name == "button_back":
+                self._navigation.out()
