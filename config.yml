@@ -1,0 +1,5 @@
+music_collection:
+  database: mishmash.db
+
+log:
+  path: krv2/log

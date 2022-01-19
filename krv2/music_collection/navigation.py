@@ -4,13 +4,6 @@ import json
 from pathlib import Path
 from typing import Dict, Union, Type, List, Callable
 
-import mishmash.orm.core as mc
-
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, Numeric, Table, Text, create_engine
-from sqlalchemy.sql.sqltypes import NullType
-from sqlalchemy.orm import relationship, sessionmaker, session
-from sqlalchemy.ext.declarative import declarative_base
-
 from krv2.music_collection import Database
 
 
@@ -49,7 +42,7 @@ class Navigation:
     def __init__(self, nav_config: dict, db: Database):
         self._db: Database = db
         self._slice_size = nav_config.get("slice_size", 5)
-        self._content = self._load_artists(self._db.load_artist_names)
+        self._content = self._load_artists(self._db.get_all_artist_names)
         self._cursor: int = 0
         self._slice_range: list = self._update_list_slice()
 

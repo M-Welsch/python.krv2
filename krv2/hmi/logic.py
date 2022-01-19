@@ -1,6 +1,6 @@
 from enum import Enum
 
-from krv2.hmi.navigation import Navigation
+from krv2.music_collection import Navigation
 
 
 class States(Enum):

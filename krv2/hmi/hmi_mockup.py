@@ -27,7 +27,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('python.krv2/krv2/mockups/frontplate_conf.ui', self)
+        uic.loadUi('krv2/mockups/frontplate_conf.ui', self)
 
         self.pb_Source = self.findChild(QtWidgets.QPushButton, 'PB_Source')
         self.pb_PausePlay = self.findChild(QtWidgets.QPushButton, 'PB_PausePlay')
