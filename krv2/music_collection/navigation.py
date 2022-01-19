@@ -1,3 +1,5 @@
+from enum import Enum
+
 from signalslot import Signal
 from pathlib import Path
 import json
@@ -8,7 +10,8 @@ from krv2.music_collection import Database
 
 
 class ContentElement:
-    pass
+    cmd: str = ""
+    name: str = ""
 
 
 PREPENDED_COMMANDS = ["<play all>"]
@@ -37,14 +40,21 @@ class Content:
         return "\n".join(complete_list)
 
 
+class ContentLayer(Enum):
+    artist_list_start_letter = 0
+    artist_list = 1
+    album_list = 2
+    track_list = 3
+
 
 class Navigation:
     def __init__(self, nav_config: dict, db: Database):
         self._db: Database = db
         self._slice_size = nav_config.get("slice_size", 5)
+        self._content_layer = ContentLayer.artist_list
         self._content = self._load_artists(self._db.get_all_artist_names)
         self._cursor: int = 0
-        self._slice_range: list = self._update_list_slice()
+        self._slice_range: range = self._update_list_slice()
 
     @staticmethod
     def _load_artists(load_artist_names: Callable) -> Content:
@@ -52,30 +62,49 @@ class Navigation:
         elements = [DatabaseElement(name=artist_name) for artist_name in artist_names]
         return Content(elements=elements)
 
-    def _update_list_slice(self) -> List[int]:
+    def _load_albums_of_artist(self) -> Content:
+        current_content_element: ContentElement = self._content.elements[self._cursor]
+        current_artist = current_content_element.name
+        album_names = self._db.get_albums_of_artist_by_name(current_artist)
+        elements = [DatabaseElement(name=album_name) for album_name in album_names]
+        return Content(elements=elements)
+
+    def _load_tracks_of_album(self) -> Content:
+        ...
+
+    def _update_list_slice(self) -> range:
         cursor = self._cursor
         slice_size = self._slice_size
         maximum = self._content.size
 
         if maximum < self._slice_size:
-            return list(range(slice_size))
+            return range(slice_size)
         if cursor < 3:
-            return list(range(slice_size))
+            return range(slice_size)
         elif cursor > (maximum - 3):
-            return list(range(maximum-slice_size, maximum))
+            return range(maximum-slice_size, maximum)
         else:
-            return list(range(cursor-2, cursor+3))
+            return range(cursor-2, cursor+3)
 
     def up(self):
-        self._cursor += 1
-        self._update_list_slice()
+        if self._cursor < self._content.size - 1:
+            self._cursor += 1
+            self._update_list_slice()
 
     def down(self):
-        self._cursor -= 1
-        self._update_list_slice()
+        if self._cursor > 0:
+            self._cursor -= 1
+            self._update_list_slice()
 
     def into(self):
-        ...
+        if self._content_layer == ContentLayer.artist_list:
+            self._content = self._load_albums_of_artist()
+            self._content_layer = ContentLayer.album_list
+        elif self._content_layer == ContentLayer.album_list:
+            self._content = self._load_tracks_of_album()
+            self._content_layer = ContentLayer.track_list
+        elif self._content_layer == ContentLayer.track_list:
+            ...
 
     def out(self):
         ...

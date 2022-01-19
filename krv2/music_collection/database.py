@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 
 import mishmash.orm.core as mc
+from mishmash.orm import Album
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, Numeric, Table, Text, create_engine
 from sqlalchemy.sql.sqltypes import NullType
@@ -43,6 +44,7 @@ class Database:
         artist = self.get_artist_by_name(artist_name)
         albums = self.get_albums_of_artist(artist)
         if albums:
+            album: Album
             for album in albums:
                 if album.title == album_title:
                     break
