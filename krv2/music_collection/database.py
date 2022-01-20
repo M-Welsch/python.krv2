@@ -11,13 +11,9 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 class Database:
-    def __init__(self, cfg_db: dict):
-        self._session: Session = self.get_session(cfg_db["path"])
-
-    @staticmethod
-    def get_session(db_path: str) -> Session:
-        engine = create_engine(f"sqlite:///{db_path}", echo=True)
-        return sessionmaker(bind=engine)()
+    def __init__(self, cfg_db: dict, verbose: bool = False):
+        self._engine = create_engine(f"sqlite:///{cfg_db['path']}", echo=verbose)
+        self._session: Session = sessionmaker(bind=self._engine)()
 
     @property
     def session(self) -> Session:
@@ -33,12 +29,12 @@ class Database:
         return self._session.query(mc.Artist).filter(mc.Artist.name == name).first()
 
     @staticmethod
-    def get_albums_of_artist(artist) -> List[mc.Album]:
+    def get_albums_of_artist(artist: mc.Artist) -> List[mc.Album]:
         return artist.albums
 
-    def get_albums_of_artist_by_name(self, artist_name: str) -> List[str]:
+    def get_albums_of_artist_by_name(self, artist_name: str) -> List[mc.Artist]:
         artist = self._session.query(mc.Artist).filter(mc.Artist.name == artist_name).first()
-        return [album.title for album in artist.albums]
+        return [album for album in artist.albums]
 
     def get_tracks_of_album_by_name(self, artist_name: str, album_title: str) -> List[mc.Track]:
         artist = self.get_artist_by_name(artist_name)
@@ -51,6 +47,9 @@ class Database:
             return album.tracks
         else:
             return []
+
+    def get_tracks_of_album(self, artist: mc.Artist, album: mc.Album) -> List[mc.Track]:
+        return self.get_tracks_of_album_by_name(artist_name=artist.name, album_title=album.title)
 
     @staticmethod
     def get_track_file_location(track: mc.Track) -> Path:
