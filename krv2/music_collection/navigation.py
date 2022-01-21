@@ -54,8 +54,7 @@ class Cursor:
         else:
             return None
 
-    @property
-    def current_pos(self) -> str:
+    def __repr__(self) -> str:
         pos = f"{self.index}/{self.list_size}: "
         if self.current_artist:
             pos += f"{self.current_artist.name}"
@@ -125,19 +124,14 @@ class Navigation:
         return elements
 
     def _load_albums_of_artist(self) -> Optional[List[ContentElement]]:
-        current_content_element: ContentElement = self._content.elements[self._cursor.index]
-        if isinstance(current_content_element, ContentElement) and self._cursor.layer == ContentLayer.album_list:
-            current_artist = current_content_element.db_reference
-            albums: List[Album] = self._db.get_albums_of_artist(current_artist)
-            self._cursor.current_artist = current_artist
+        if self._cursor.layer == ContentLayer.album_list:
+            albums: List[Album] = self._db.get_albums_of_artist(self._cursor.current_artist)
             return [ContentElement(caption=album.title, db_reference=album) for album in albums]
         else:
             LOG.warning("will not load album list")
 
     def _load_tracks_of_album(self) -> List[ContentElement]:
-        current_content_element: ContentElement = self._content.elements[self._cursor.index]
-        if isinstance(current_content_element, ContentElement) and self._cursor.layer == ContentLayer.track_list:
-            self._cursor.current_album = current_content_element
+        if self._cursor.layer == ContentLayer.track_list:
             tracks: List[Track] = self._db.get_tracks_of_album(artist=self._cursor.current_artist, album=self._cursor.current_album)
             return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
         else:

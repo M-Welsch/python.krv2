@@ -4,10 +4,8 @@ from faker import Faker
 import pytest
 from pytest_mock import MockFixture
 
-import krv2.music_collection
 from krv2.music_collection import Database
-from krv2.music_collection.navigation import PREPENDED_COMMANDS, CommandElement, DatabaseElement, Navigation, Content, \
-    ContentLayer
+from krv2.music_collection.navigation import Navigation, Content, ContentLayer, ContentElement
 
 
 class Artist:
@@ -26,6 +24,17 @@ def nav():
     yield Navigation({}, db)
 
 
+@pytest.fixture
+def nav_w_fake_content(nav):
+    fake = Faker()
+    lengh_fake_names: int = 2
+    fake_names = [fake.name() for i in range(lengh_fake_names)]
+    nav._content = Content(
+        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
+    nav._cursor.content = nav._content
+    yield nav
+
+
 def test_load_artists(nav: Navigation, mocker: MockFixture) -> None:
     fake = Faker()
     length_artist_list: int = 5
@@ -36,9 +45,9 @@ def test_load_artists(nav: Navigation, mocker: MockFixture) -> None:
     nav._db.get_all_artists = get_all_artists
     artists = nav._load_artists()
     assert len(artists) == length_artist_list
-    assert len([element for element in artists if isinstance(element, DatabaseElement)]) == length_artist_list
+    assert len([element for element in artists if isinstance(element, ContentElement)]) == length_artist_list
     for artist in artists:
-        assert isinstance(artist, DatabaseElement)
+        assert isinstance(artist, ContentElement)
         assert isinstance(artist.name, str)
         # assert isinstance(artist.db_reference, mc.Artist)  # cannot check for that right now
     print(artists)
@@ -49,7 +58,7 @@ def test_update_list_slice(nav: Navigation) -> None:
     lentgh_fake_names: int = 10
     fake_names = [fake.name() for i in range(lentgh_fake_names)]
     nav._content = Content(
-        content_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
+        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
     for cursor in range(lentgh_fake_names):
         nav._cursor.index = cursor
         ls = nav._update_list_slice()
@@ -57,16 +66,11 @@ def test_update_list_slice(nav: Navigation) -> None:
         assert cursor in ls
 
 
-def test_down(nav: Navigation, mocker: MockFixture) -> None:
-    fake = Faker()
-    lentgh_fake_names: int = 2
-    fake_names = [fake.name() for i in range(lentgh_fake_names)]
-    nav._content = Content(
-        content_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
-
+def test_down(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
+    nav = nav_w_fake_content  # just for convenience
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 0
-    nav._cursor.list_size = lentgh_fake_names
+    nav._cursor.list_size = len(nav._content.elements)
     nav.down()
     assert nav._cursor.index == initial_cursor + 1
     assert m_update_list_slice.called_once
@@ -77,7 +81,8 @@ def test_down(nav: Navigation, mocker: MockFixture) -> None:
     assert m_update_list_slice.call_count == 0
 
 
-def test_up(nav: Navigation, mocker: MockFixture) -> None:
+def test_up(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
+    nav = nav_w_fake_content  # just for convenience
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 1
     nav.up()
@@ -136,9 +141,8 @@ def test_out(nav: Navigation, mocker: MockFixture) -> None:
 
 def test_derive_cursor_index(db: Database) -> None:
     nav = Navigation({}, db)
-    nav._cursor.goto_first_db_element()
     cursor_index_pre_test = nav._cursor.index
-    assert isinstance(nav._cursor.current, DatabaseElement)
+    assert isinstance(nav._cursor.current, ContentElement)
     nav.into()
     nav.out()
     assert nav._cursor.index == cursor_index_pre_test
