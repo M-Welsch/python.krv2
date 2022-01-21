@@ -48,7 +48,8 @@ def test_update_list_slice(nav: Navigation) -> None:
     fake = Faker()
     lentgh_fake_names: int = 10
     fake_names = [fake.name() for i in range(lentgh_fake_names)]
-    nav._content = Content(database_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
+    nav._content = Content(
+        content_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
     for cursor in range(lentgh_fake_names):
         nav._cursor.index = cursor
         ls = nav._update_list_slice()
@@ -60,7 +61,8 @@ def test_down(nav: Navigation, mocker: MockFixture) -> None:
     fake = Faker()
     lentgh_fake_names: int = 2
     fake_names = [fake.name() for i in range(lentgh_fake_names)]
-    nav._content = Content(database_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
+    nav._content = Content(
+        content_elements=[DatabaseElement(caption=fakename, db_reference=0) for fakename in fake_names])
 
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 0

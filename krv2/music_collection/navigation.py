@@ -1,7 +1,6 @@
 from enum import Enum
 
 from signalslot import Signal
-from pathlib import Path
 import json
 from pathlib import Path
 from typing import Dict, Union, Type, List, Callable, Optional
@@ -15,43 +14,19 @@ LOG = logging.getLogger(__name__)
 
 
 class ContentElement:
-    cmd: str = ""
-    name: str = ""
-
-
-PREPENDED_COMMANDS = ["<play all>"]
-
-
-class CommandElement(ContentElement):
-    def __init__(self, cmd: str):
-        self.cmd: str = cmd
-
-
-class DatabaseElement(ContentElement):
     def __init__(self, caption: str, db_reference: Union[Album, Artist, Track]):
         self.name = caption
         self.db_reference: Union[Album, Artist, Track] = db_reference
 
 
 class Content:
-    def __init__(self, database_elements: List[DatabaseElement]):
-        self.elements: List[Union[CommandElement, DatabaseElement]] = [CommandElement(cmd=cmd) for cmd in PREPENDED_COMMANDS]
-        self.elements.extend(database_elements)
+    def __init__(self, content_elements: List[ContentElement]):
+        self.elements = content_elements
         self.type = Type
         self.size: int = len(self.elements)
 
     def __repr__(self) -> str:
-        complete_list = [element.cmd for element in self.elements if isinstance(element, CommandElement)]
-        complete_list.extend([element.name for element in self.elements if isinstance(element, DatabaseElement)])
-        return "\n".join(complete_list)
-
-    @property
-    def db_elements(self) -> List[DatabaseElement]:
-        return [element for element in self.elements if isinstance(element, DatabaseElement)]
-
-    @property
-    def cmd_elements(self) -> List[CommandElement]:
-        return [element for element in self.elements if isinstance(element, CommandElement)]
+        return "\n".join([element.name for element in self.elements])
 
 
 class ContentLayer(Enum):
@@ -90,9 +65,6 @@ class Cursor:
             pos += f" -> {self.current_track.title}"
         return pos
 
-    def goto_first_db_element(self):
-        self.index = len(PREPENDED_COMMANDS)
-
     def increment(self) -> bool:
         if self.index < self.list_size - 1:
             self.index += 1
@@ -107,10 +79,7 @@ class Cursor:
 
     @property
     def current_artist_m(self) -> Artist:
-        if isinstance(self.current, CommandElement):
-            db_ref_relevant_element = self.content.elements[len(PREPENDED_COMMANDS)].db_reference
-        elif isinstance(self.current, DatabaseElement):
-            db_ref_relevant_element = self.current.db_reference
+        db_ref_relevant_element = self.current.db_reference
 
         if isinstance(db_ref_relevant_element, Artist):
             return db_ref_relevant_element
@@ -120,7 +89,6 @@ class Cursor:
     @property
     def current_album_m(self) -> Optional[Album]:
         db_ref_current_element = self.current.db_reference
-
 
     def refresh_current_elements(self):
         if self.layer == ContentLayer.artist_list:
@@ -147,31 +115,31 @@ class Navigation:
             ContentLayer.track_list: self._load_tracks_of_album
         }
         elements = content_buildup_instructions[self._cursor.layer]()
-        content = Content(database_elements=elements)
+        content = Content(content_elements=elements)
         self._cursor.list_size = content.size
         return content
 
-    def _load_artists(self) -> List[DatabaseElement]:
+    def _load_artists(self) -> List[ContentElement]:
         artists = self._db.get_all_artists()
-        elements = [DatabaseElement(caption=artist.name, db_reference=artist) for artist in artists]
+        elements = [ContentElement(caption=artist.name, db_reference=artist) for artist in artists]
         return elements
 
-    def _load_albums_of_artist(self) -> Optional[List[DatabaseElement]]:
-        current_content_element: DatabaseElement = self._content.elements[self._cursor.index]
-        if isinstance(current_content_element, DatabaseElement) and self._cursor.layer == ContentLayer.album_list:
+    def _load_albums_of_artist(self) -> Optional[List[ContentElement]]:
+        current_content_element: ContentElement = self._content.elements[self._cursor.index]
+        if isinstance(current_content_element, ContentElement) and self._cursor.layer == ContentLayer.album_list:
             current_artist = current_content_element.db_reference
             albums: List[Album] = self._db.get_albums_of_artist(current_artist)
             self._cursor.current_artist = current_artist
-            return [DatabaseElement(caption=album.title, db_reference=album) for album in albums]
+            return [ContentElement(caption=album.title, db_reference=album) for album in albums]
         else:
             LOG.warning("will not load album list")
 
-    def _load_tracks_of_album(self) -> List[DatabaseElement]:
-        current_content_element: DatabaseElement = self._content.elements[self._cursor.index]
-        if isinstance(current_content_element, DatabaseElement) and self._cursor.layer == ContentLayer.track_list:
+    def _load_tracks_of_album(self) -> List[ContentElement]:
+        current_content_element: ContentElement = self._content.elements[self._cursor.index]
+        if isinstance(current_content_element, ContentElement) and self._cursor.layer == ContentLayer.track_list:
             self._cursor.current_album = current_content_element
             tracks: List[Track] = self._db.get_tracks_of_album(artist=self._cursor.current_artist, album=self._cursor.current_album)
-            return [DatabaseElement(caption=track.title, db_reference=track) for track in tracks]
+            return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
         else:
             LOG.warning("will not load track list")
 
@@ -223,10 +191,9 @@ class Navigation:
             ContentLayer.album_list: self._cursor.current_album
         }
         try:
-            db_references = [e.db_reference for e in self._content.db_elements]
+            db_references = [e.db_reference for e in self._content.elements]
             index_in_database_elements = db_references.index(lookup_map[self._cursor.layer])
-            offset_due_to_command_elements = len(self._content.cmd_elements)
-            return index_in_database_elements + offset_due_to_command_elements
+            return index_in_database_elements
         except IndexError:
             LOG.warning("cannot get current cursor index properly")
             return 0
