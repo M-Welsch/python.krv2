@@ -5,6 +5,7 @@ import pytest
 from pytest_mock import MockFixture
 
 import krv2.music_collection
+from krv2.music_collection import Database
 from krv2.music_collection.navigation import PREPENDED_COMMANDS, CommandElement, DatabaseElement, Navigation, Content, \
     ContentLayer
 
@@ -55,7 +56,7 @@ def test_update_list_slice(nav: Navigation) -> None:
         assert cursor in ls
 
 
-def test_up(nav: Navigation, mocker: MockFixture) -> None:
+def test_down(nav: Navigation, mocker: MockFixture) -> None:
     fake = Faker()
     lentgh_fake_names: int = 2
     fake_names = [fake.name() for i in range(lentgh_fake_names)]
@@ -64,25 +65,25 @@ def test_up(nav: Navigation, mocker: MockFixture) -> None:
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 0
     nav._cursor.list_size = lentgh_fake_names
-    nav.up()
+    nav.down()
     assert nav._cursor.index == initial_cursor + 1
     assert m_update_list_slice.called_once
 
     m_update_list_slice.reset_mock()
-    nav.up()
+    nav.down()
     assert nav._cursor.index == nav._cursor.list_size - 1
     assert m_update_list_slice.call_count == 0
 
 
-def test_down(nav: Navigation, mocker: MockFixture) -> None:
+def test_up(nav: Navigation, mocker: MockFixture) -> None:
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 1
-    nav.down()
+    nav.up()
     assert nav._cursor.index == initial_cursor - 1
     assert m_update_list_slice.called_once
 
     m_update_list_slice.reset_mock()
-    nav.down()
+    nav.up()
     assert nav._cursor.index == 0
     assert m_update_list_slice.call_count == 0
 
@@ -109,7 +110,7 @@ def test_into(nav: Navigation, mocker: MockFixture) -> None:
 
 def test_out(nav: Navigation, mocker: MockFixture) -> None:
     m_build_content_list = mocker.patch("krv2.music_collection.Navigation.build_content_list")
-    m_derivate_cursor_index = mocker.patch("krv2.music_collection.Navigation._derivate_cursor_index")
+    m_derivate_cursor_index = mocker.patch("krv2.music_collection.Navigation._derive_cursor_index")
     nav._cursor.layer = ContentLayer.track_list
 
     nav.out()
@@ -131,5 +132,11 @@ def test_out(nav: Navigation, mocker: MockFixture) -> None:
     assert m_derivate_cursor_index.call_count == 0
 
 
-def test_derivate_cursor_index(nav: Navigation) -> None:
-    ...
+def test_derive_cursor_index(db: Database) -> None:
+    nav = Navigation({}, db)
+    nav._cursor.goto_first_db_element()
+    cursor_index_pre_test = nav._cursor.index
+    assert isinstance(nav._cursor.current, DatabaseElement)
+    nav.into()
+    nav.out()
+    assert nav._cursor.index == cursor_index_pre_test
