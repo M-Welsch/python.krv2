@@ -17,7 +17,7 @@ def create_fake_db_entries(session: Session, amount_artists: int, albums_per_art
         for fake_album in fake_albums:
             fake_tracks = [mc.Track(
                 path=f"{fake_artist}/{fake_album}/{i}.mp3", size_bytes=(i+1), ctime=datetime.now(), mtime=datetime.now(), date_added=datetime.now(),
-                time_secs=(i+1), title=f"Track{i}", metadata_format="IID3v2.3", artist=fake_artist, album=fake_album, library=lib
+                time_secs=(i+1), title=f"Track{i}", metadata_format="ID3v2.3", artist=fake_artist, album=fake_album, library=lib
             )for i in range(tracks_per_album)]
             session.add_all(fake_tracks)
         session.add_all(fake_albums)

@@ -65,6 +65,17 @@ def test_get_albums(nav: Navigation) -> None:
 
 
 def test_traverse_database(nav: Navigation) -> None:
+    nav._cursor.goto_first_db_element()
     for iartist in range(AMOUNT_ARTISTS):
-        pass
+        nav.into()
+        nav._cursor.goto_first_db_element()
+        for ialbum in range(ALBUMS_PER_ARTIST):
+            nav.into()
+            nav._cursor.goto_first_db_element()
+            for itrack in range(TRACKS_PER_ALBUM):
+                nav.down()
+            nav.out()
+            nav.down()
+        nav.down()
+        nav.out()
 

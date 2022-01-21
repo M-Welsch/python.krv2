@@ -96,12 +96,39 @@ class Cursor:
     def increment(self) -> bool:
         if self.index < self.list_size - 1:
             self.index += 1
+            self.refresh_current_elements()
             return True
 
     def decrement(self) -> bool:
         if self.index > 0:
             self.index -= 1
+            self.refresh_current_elements()
             return True
+
+    @property
+    def current_artist_m(self) -> Artist:
+        if isinstance(self.current, CommandElement):
+            db_ref_relevant_element = self.content.elements[len(PREPENDED_COMMANDS)].db_reference
+        elif isinstance(self.current, DatabaseElement):
+            db_ref_relevant_element = self.current.db_reference
+
+        if isinstance(db_ref_relevant_element, Artist):
+            return db_ref_relevant_element
+        elif isinstance(db_ref_relevant_element, Album) or isinstance(db_ref_relevant_element, Track):
+            return db_ref_relevant_element.artist
+
+    @property
+    def current_album_m(self) -> Optional[Album]:
+        db_ref_current_element = self.current.db_reference
+
+
+    def refresh_current_elements(self):
+        if self.layer == ContentLayer.artist_list:
+            self.current_artist = self.content.elements[self.index].db_reference
+        elif self.layer == ContentLayer.album_list:
+            self.current_album = self.content.elements[self.index].db_reference
+        elif self.layer == ContentLayer.track_list:
+            self.current_track = self.content.elements[self.index].db_reference
 
 
 class Navigation:
