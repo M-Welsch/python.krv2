@@ -44,13 +44,22 @@ class Cursor:
     def __init__(self, index: int, content_layer: ContentLayer, content: Optional[Content] = None):
         self.index: int = index
         self.layer: ContentLayer = content_layer
-        self.content = content
+        self._content = content
         self.list_size: int = content.size if content else 0
 
     @property
+    def content(self) -> Content:
+        return self._content
+
+    @content.setter
+    def content(self, content) -> None:
+        self._content = content
+        self.refresh_current_elements()
+
+    @property
     def current(self) -> Optional[ContentElement]:
-        if self.content:
-            return self.content.elements[self.index]
+        if self._content:
+            return self._content.elements[self.index]
         else:
             return None
 
