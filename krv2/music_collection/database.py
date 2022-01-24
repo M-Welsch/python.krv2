@@ -13,11 +13,13 @@ LOG = logging.getLogger(__name__)
 
 class Database:
     def __init__(self, cfg_db: dict, verbose: bool = False):
+        print("cfg_dict <<<<<<<<<<<<<<<<<<<<<<<")
+        print(cfg_db)
         connect_str = f"sqlite:///{cfg_db['path']}"
         LOG.info(f"connecting to database with: {connect_str}")
         self._engine = create_engine(connect_str, echo=verbose)
         self._session: Session = sessionmaker(bind=self._engine)()
-        self.create_missing_tables(cfg_db["create_tables_if_nonexistent"])
+        self.create_missing_tables(cfg_db.get("create_tables_if_nonexistent", True))
 
     def create_missing_tables(self, create_tables_if_nonexistent: bool):
         if create_tables_if_nonexistent:

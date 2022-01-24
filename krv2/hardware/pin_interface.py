@@ -13,21 +13,21 @@ LOG = logging.getLogger(Path(__file__).name)
 
 class Pins:
     enc0 = {
-        "a":6, # Pin 31
-        "b":12 # Pin 32
+        "a": 4,  # Pin 7
+        "b": 17  # Pin 11
     }
     enc1 = {
-        "a":13, # Pin 33
-        "b":26 # Pin 37
+        "a": 27,  # Pin 13
+        "b": 22  # Pin 14
     }
     power = {
-        "en_front_usb_loadsw": 22, # Pin 15
-        "nfault_front_usb_loadsw": 0 # Pin 27
+        "en_front_usb_loadsw": 22,  # Pin 15
+        "nfault_front_usb_loadsw": 0  # Pin 27
     }
     pe = {
-        "mb_ninta": 23, # Pin 16
-        "hmi_ninta": 24, # Pin 18
-        "nrst": 25 # Pin 22
+        "mb_ninta": 23,  # Pin 16
+        "hmi_ninta": 24,  # Pin 18
+        "nrst": 25  # Pin 22
     }
 
 
@@ -38,7 +38,7 @@ class PinInterface:
         gpio_mode = GPIO.BCM
         GPIO.setmode(gpio_mode)
         self._setup_buttons()
-        # self._setup_encoder_pins()
+        self._setup_encoder_pins()
         self._setup_internal_signals()
 
     @staticmethod
