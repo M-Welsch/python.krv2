@@ -41,11 +41,13 @@ class Cursor:
     current_album: Optional[Album] = None
     current_track: Optional[Track] = None
 
-    def __init__(self, index: int, content_layer: ContentLayer, content: Optional[Content] = None):
+    def __init__(self, index: int, content_layer: ContentLayer, db: Database):
+        self._db = db
         self.index: int = index
         self.layer: ContentLayer = content_layer
-        self._content = content
-        self.list_size: int = content.size if content else 0
+        self._content = self.build_content_list()
+        self.list_size: int = self._content.size
+        self.refresh_current_elements()
 
     @property
     def content(self) -> Content:
@@ -85,19 +87,6 @@ class Cursor:
             self.refresh_current_elements()
             return True
 
-    @property
-    def current_artist_m(self) -> Artist:
-        db_ref_relevant_element = self.current.db_reference
-
-        if isinstance(db_ref_relevant_element, Artist):
-            return db_ref_relevant_element
-        elif isinstance(db_ref_relevant_element, Album) or isinstance(db_ref_relevant_element, Track):
-            return db_ref_relevant_element.artist
-
-    @property
-    def current_album_m(self) -> Optional[Album]:
-        db_ref_current_element = self.current.db_reference
-
     def refresh_current_elements(self):
         if self.layer == ContentLayer.artist_list:
             self.current_artist = self.content.elements[self.index].db_reference
@@ -106,24 +95,15 @@ class Cursor:
         elif self.layer == ContentLayer.track_list:
             self.current_track = self.content.elements[self.index].db_reference
 
-
-class Navigation:
-    def __init__(self, nav_config: dict, db: Database):
-        self._db: Database = db
-        self._slice_size = nav_config.get("slice_size", 5)
-        self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list)
-        self._cursor.content = self.build_content_list()
-        self._slice_range: range = self._update_list_slice()
-
     def build_content_list(self) -> Content:
         content_buildup_instructions = {
             ContentLayer.artist_list: self._load_artists,
             ContentLayer.album_list: self._load_albums_of_artist,
             ContentLayer.track_list: self._load_tracks_of_album
         }
-        elements = content_buildup_instructions[self._cursor.layer]()
+        elements = content_buildup_instructions[self.layer]()
         content = Content(content_elements=elements)
-        self._cursor.list_size = content.size
+        self.list_size = content.size
         return content
 
     def _load_artists(self) -> List[ContentElement]:
@@ -132,18 +112,26 @@ class Navigation:
         return elements
 
     def _load_albums_of_artist(self) -> Optional[List[ContentElement]]:
-        if self._cursor.layer == ContentLayer.album_list:
-            albums: List[Album] = self._db.get_albums_of_artist(self._cursor.current_artist)
+        if self.layer == ContentLayer.album_list:
+            albums: List[Album] = self._db.get_albums_of_artist(self.current_artist)
             return [ContentElement(caption=album.title, db_reference=album) for album in albums]
         else:
             LOG.warning("will not load album list")
 
     def _load_tracks_of_album(self) -> List[ContentElement]:
-        if self._cursor.layer == ContentLayer.track_list:
-            tracks: List[Track] = self._db.get_tracks_of_album(artist=self._cursor.current_artist, album=self._cursor.current_album)
+        if self.layer == ContentLayer.track_list:
+            tracks: List[Track] = self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
             return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
         else:
             LOG.warning("will not load track list")
+
+
+class Navigation:
+    def __init__(self, nav_config: dict, db: Database):
+        self._db: Database = db
+        self._slice_size = nav_config.get("slice_size", 5)
+        self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list, db=self._db)
+        self._slice_range: range = self._update_list_slice()
 
     def _update_list_slice(self) -> range:
         cursor = self._cursor.index
@@ -174,7 +162,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.track_list
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
-            self._cursor.content = self.build_content_list()
+            self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = 0
 
     def out(self):
@@ -184,7 +172,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.artist_list
             }
             self._cursor.layer = higher_layer[self._cursor.layer]
-            self._cursor.content = self.build_content_list()
+            self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = self._derive_cursor_index()
 
     def _derive_cursor_index(self) -> int:

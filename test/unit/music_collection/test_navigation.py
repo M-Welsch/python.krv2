@@ -4,8 +4,10 @@ from faker import Faker
 import pytest
 from pytest_mock import MockFixture
 
+import krv2.music_collection
 from krv2.music_collection import Database
 from krv2.music_collection.navigation import Navigation, Content, ContentLayer, ContentElement
+from test.utils import derive_mock_string
 
 
 class Artist:
@@ -43,7 +45,7 @@ def test_load_artists(nav: Navigation, mocker: MockFixture) -> None:
         return [Artist(fake.name(), i) for i in range(length_artist_list)]
 
     nav._db.get_all_artists = get_all_artists
-    artists = nav._load_artists()
+    artists = nav._cursor._load_artists()
     assert len(artists) == length_artist_list
     assert len([element for element in artists if isinstance(element, ContentElement)]) == length_artist_list
     for artist in artists:
@@ -68,9 +70,9 @@ def test_update_list_slice(nav: Navigation) -> None:
 
 def test_down(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
     nav = nav_w_fake_content  # just for convenience
-    m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
+    m_update_list_slice = mocker.patch(derive_mock_string(krv2.music_collection.Navigation._update_list_slice))
     nav._cursor.index = initial_cursor = 0
-    nav._cursor.list_size = len(nav._content.elements)
+    nav._cursor.list_size = len(nav._cursor._content.elements)
     nav.down()
     assert nav._cursor.index == initial_cursor + 1
     assert m_update_list_slice.called_once
@@ -96,7 +98,7 @@ def test_up(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
 
 
 def test_into(nav: Navigation, mocker: MockFixture) -> None:
-    m_build_content_list = mocker.patch("krv2.music_collection.Navigation.build_content_list")
+    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.build_content_list))
     assert nav._cursor.layer == ContentLayer.artist_list
     nav.into()
     assert nav._cursor.layer == ContentLayer.album_list
@@ -116,8 +118,8 @@ def test_into(nav: Navigation, mocker: MockFixture) -> None:
 
 
 def test_out(nav: Navigation, mocker: MockFixture) -> None:
-    m_build_content_list = mocker.patch("krv2.music_collection.Navigation.build_content_list")
-    m_derivate_cursor_index = mocker.patch("krv2.music_collection.Navigation._derive_cursor_index")
+    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.build_content_list))
+    m_derivate_cursor_index = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Navigation._derive_cursor_index))
     nav._cursor.layer = ContentLayer.track_list
 
     nav.out()
@@ -139,8 +141,7 @@ def test_out(nav: Navigation, mocker: MockFixture) -> None:
     assert m_derivate_cursor_index.call_count == 0
 
 
-def test_derive_cursor_index(db: Database) -> None:
-    nav = Navigation({}, db)
+def test_derive_cursor_index(nav: Navigation) -> None:
     cursor_index_pre_test = nav._cursor.index
     assert isinstance(nav._cursor.current, ContentElement)
     nav.into()

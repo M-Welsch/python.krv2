@@ -25,25 +25,25 @@ def test_initial_stage(nav: Navigation) -> None:
     assert nav._cursor.index == 0
     assert nav._cursor.layer == ContentLayer.artist_list
     assert nav._slice_range == range(nav._slice_size)
-    db_elements = [e for e in nav._content.elements if isinstance(e, ContentElement)]
+    db_elements = [e for e in nav._cursor._content.elements if isinstance(e, ContentElement)]
     for index, db_element in enumerate(db_elements):
         assert isinstance(db_element.db_reference, mc.Artist)
         assert db_element.name == f"artist{index}"
 
 
 def test_content_composition(nav: Navigation) -> None:
-    db_elements = [e for e in nav._content.elements if isinstance(e, ContentElement)]
+    db_elements = [e for e in nav._cursor._content.elements if isinstance(e, ContentElement)]
     assert len(db_elements) == 5
 
 
 def test_get_artists(nav: Navigation) -> None:
     for iartist in range(AMOUNT_ARTISTS):
-        assert isinstance(nav._content.elements[nav._cursor.index], ContentElement)
+        assert isinstance(nav._cursor._content.elements[nav._cursor.index], ContentElement)
         assert nav._cursor.layer == ContentLayer.artist_list
         print(nav._cursor)
         nav.into()
         assert nav._cursor.layer == ContentLayer.album_list
-        for index, db_element in enumerate(nav._content.elements):
+        for index, db_element in enumerate(nav._cursor._content.elements):
             assert isinstance(db_element.db_reference, mc.Album)
             assert db_element.db_reference.artist == nav._cursor.current_artist
         print(nav._cursor)
