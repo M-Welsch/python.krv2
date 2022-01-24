@@ -24,7 +24,7 @@ if __name__ == '__main__':
         cfg = yaml.safe_load(cf)
     setup_logger(cfg["log"])
 
-    if machine() == 'armv7l':
+    if machine() in ['armv7l', 'armv6l']:
         print("Raspi")
         from krv2.hmi.hmi_arm import HmiArm
         h = HmiArm()
