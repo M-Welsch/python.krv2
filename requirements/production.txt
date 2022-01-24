@@ -1,0 +1,4 @@
+-r common.txt
+RPi.GPIO
+smbus2
+spidev

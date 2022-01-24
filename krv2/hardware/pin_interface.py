@@ -13,12 +13,12 @@ LOG = logging.getLogger(Path(__file__).name)
 
 class Pins:
     enc0 = {
-        "a":6, # Pin 31
-        "b":12 # Pin 32
+        "a":4, # Pin 7
+        "b":17 # Pin 11
     }
     enc1 = {
-        "a":13, # Pin 33
-        "b":26 # Pin 37
+        "a":22, # Pin 15
+        "b":27 # Pin 13
     }
     power = {
         "en_front_usb_loadsw": 22, # Pin 15
@@ -38,7 +38,7 @@ class PinInterface:
         gpio_mode = GPIO.BCM
         GPIO.setmode(gpio_mode)
         self._setup_buttons()
-        # self._setup_encoder_pins()
+        self._setup_encoder_pins()
         self._setup_internal_signals()
 
     @staticmethod
@@ -50,6 +50,9 @@ class PinInterface:
 
     @staticmethod
     def _setup_encoder_pins():
+        for enc_pin in Pins.enc0.values():
+            GPIO.setup(enc_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(enc_pin, GPIO.FALLING)
         for enc_pin in Pins.enc1.values():
             GPIO.setup(enc_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(enc_pin, GPIO.FALLING)
