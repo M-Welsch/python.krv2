@@ -147,10 +147,12 @@ class Navigation:
     def up(self):
         if self._cursor.decrement():
             self._update_list_slice()
+            print(self._cursor)
 
     def down(self):
         if self._cursor.increment():
             self._update_list_slice()
+            print(self._cursor)
 
     def into(self):
         if not self._cursor.layer == ContentLayer.track_list:
@@ -161,6 +163,7 @@ class Navigation:
             self._cursor.layer = lower_layer[self._cursor.layer]
             self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = 0
+            print(self._cursor)
 
     def out(self):
         if not self._cursor.layer == ContentLayer.artist_list:
@@ -171,6 +174,7 @@ class Navigation:
             self._cursor.layer = higher_layer[self._cursor.layer]
             self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = self._derive_cursor_index()
+            print(self._cursor)
 
     def _derive_cursor_index(self) -> int:
         lookup_map = {

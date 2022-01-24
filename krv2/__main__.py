@@ -33,7 +33,7 @@ if __name__ == '__main__':
         from krv2.hmi.hmi_x86 import HmiX86
         h = HmiX86()
     else:
-        raise ValueError("I don't know who I am!")
+        raise ValueError("I don't know who I am! Problably the hardware platform is not supported (yet)!")
     Logic(hmi=h, cfg_logic=cfg["logic"])
 
 # create symlink for mockup: sudo ln -s /home/max/Music /home/pi
