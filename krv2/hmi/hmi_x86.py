@@ -3,8 +3,10 @@ from PyQt5.QtGui import QPixmap
 import sys
 from signalslot import Signal
 
+from krv2.hmi.hmi import Hmi
 
-class Hmi:
+
+class HmiX86(Hmi):
     def __init__(self):
         self._app = QtWidgets.QApplication(sys.argv)
         self._window = Ui()

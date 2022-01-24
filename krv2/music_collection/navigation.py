@@ -1,9 +1,6 @@
 from enum import Enum
 
-from signalslot import Signal
-import json
-from pathlib import Path
-from typing import Dict, Union, Type, List, Callable, Optional
+from typing import Union, Type, List, Optional
 import logging
 
 from krv2.music_collection import Database
@@ -127,9 +124,9 @@ class Cursor:
 
 
 class Navigation:
-    def __init__(self, nav_config: dict, db: Database):
+    def __init__(self, cfg_nav: dict, db: Database):
         self._db: Database = db
-        self._slice_size = nav_config.get("slice_size", 5)
+        self._slice_size = cfg_nav.get("slice_size", 5)
         self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list, db=self._db)
         self._slice_range: range = self._update_list_slice()
 

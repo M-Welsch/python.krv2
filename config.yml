@@ -1,5 +1,9 @@
-music_collection:
-  database: mishmash.db
+logic:
+  database:
+    path: mishmash.db
+    create_tables_if_nonexistent: True
+  navigation:
+    nada: niente
 
 log:
   path: krv2/log

@@ -1,6 +1,7 @@
 from enum import Enum
 
-from krv2.music_collection import Navigation
+from krv2.hmi.hmi import Hmi
+from krv2.music_collection import Navigation, Database
 
 
 class States(Enum):
@@ -9,9 +10,10 @@ class States(Enum):
 
 
 class Logic:
-    def __init__(self, hmi):
+    def __init__(self, hmi: Hmi, cfg_logic: dict):
         self._hmi = hmi
-        self._navigation = Navigation()
+        self._db = Database(cfg_db=cfg_logic["database"])
+        self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], db=self._db)
         self._state = States.navigation
         self.connect_signals()
         self._hmi.start()

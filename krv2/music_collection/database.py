@@ -4,16 +4,24 @@ from typing import List
 import mishmash.orm.core as mc
 from mishmash.orm import Album
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, Numeric, Table, Text, create_engine
-from sqlalchemy.sql.sqltypes import NullType
-from sqlalchemy.orm import relationship, sessionmaker, Session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
 class Database:
     def __init__(self, cfg_db: dict, verbose: bool = False):
-        self._engine = create_engine(f"sqlite:///{cfg_db['path']}", echo=verbose)
+        connect_str = f"sqlite:///{cfg_db['path']}"
+        LOG.info(f"connecting to database with: {connect_str}")
+        self._engine = create_engine(connect_str, echo=verbose)
         self._session: Session = sessionmaker(bind=self._engine)()
+        self.create_missing_tables(cfg_db["create_tables_if_nonexistent"])
+
+    def create_missing_tables(self, create_tables_if_nonexistent: bool):
+        if create_tables_if_nonexistent:
+            mc.Base.metadata.create_all(self._engine)
 
     @property
     def session(self) -> Session:
