@@ -1,4 +1,4 @@
 -r common.txt
-
 pytest
 pytest-mock
+Faker

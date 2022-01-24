@@ -1,5 +1,5 @@
 sudo apt update
-sudo apt install python3-pip python3-virtualenv
+sudo apt install python3-pip -y
 
 pip install -r requirements/production.txt
 
