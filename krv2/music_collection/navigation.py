@@ -130,6 +130,13 @@ class Navigation:
         self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list, db=self._db)
         self._slice_range: range = self._update_list_slice()
 
+    @property
+    def current_slice(self) -> List[str]:  # Todo: test!
+        current_slice_captions = []
+        for item in self._update_list_slice():
+            current_slice_captions.append(self._cursor.content.elements[item].name)
+        return current_slice_captions
+
     def _update_list_slice(self) -> range:
         cursor = self._cursor.index
         slice_size = self._slice_size

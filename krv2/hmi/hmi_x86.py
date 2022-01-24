@@ -1,7 +1,9 @@
+from PIL.Image import Image
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtGui import QPixmap
 import sys
 from signalslot import Signal
+from PIL import ImageDraw
 
 from krv2.hmi.hmi import Hmi
 
@@ -15,6 +17,16 @@ class HmiX86(Hmi):
         self.enc1 = self._window.enc1
         self.enc1_sw = self._window.enc1_sw
         self.button = self._window.button
+
+    @property
+    def dis0(self) -> ImageDraw.Draw:
+        im = Image()
+        return ImageDraw.Draw(im)
+
+    @property
+    def dis1(self) -> ImageDraw.Draw:
+        im = Image()
+        return ImageDraw.Draw(im)
 
     def start(self):
         self._app.exec_()

@@ -1,3 +1,5 @@
+from PIL import ImageDraw
+from PIL.Image import Image
 from signalslot import Signal
 
 
@@ -10,3 +12,11 @@ class Hmi:
 
     def start(self):
         pass
+
+    @property
+    def dis0(self) -> ImageDraw.Draw:
+        return ImageDraw.Draw(Image())
+
+    @property
+    def dis1(self) -> ImageDraw.Draw:
+        return ImageDraw.Draw(Image())

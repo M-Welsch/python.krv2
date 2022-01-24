@@ -17,8 +17,8 @@ class Displays:
     def write_teststuff_to_displays(self):
         with canvas(self._display0) as draw, canvas(self._display1) as draw1:
             print(f"Type(draw) = {type(draw)} <><<<<<<<<<<<<<<<<<<")
-            draw.text((0,0), "Hi There", fill="white")
-            draw1.text((0,0), "Hi There", fill="white")
+            draw.text((0, 0), "Hi There", fill="white")
+            draw1.text((0, 0), "Hi There", fill="white")
         sleep(5)
 
     @property
