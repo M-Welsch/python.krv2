@@ -5,5 +5,16 @@ logic:
   navigation:
     nada: niente
 
+synchronisation:
+  remote_music_collection:
+    smb_host: 192.168.0.100
+    local_mount_point: /media/ServerHDD
+    remote_share_point_name: Multimedia
+    location_relative_to_share_point: Music
+    location_absolute: /mnt/HDD/share/Multimedia/Music
+
+  local_music_collection:
+    location: /home/pi/Music
+
 log:
   path: krv2/log
