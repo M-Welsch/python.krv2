@@ -112,8 +112,7 @@ class Navigation:
         self._db: Database = db
         self._slice_size = nav_config.get("slice_size", 5)
         self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list)
-        self._content: Content = self.build_content_list()
-        self._cursor.content = self._content
+        self._cursor.content = self.build_content_list()
         self._slice_range: range = self._update_list_slice()
 
     def build_content_list(self) -> Content:
@@ -149,7 +148,7 @@ class Navigation:
     def _update_list_slice(self) -> range:
         cursor = self._cursor.index
         slice_size = self._slice_size
-        maximum = self._content.size
+        maximum = self._cursor.content.size
 
         if maximum < self._slice_size:
             return range(slice_size)
@@ -175,7 +174,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.track_list
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
-            self._content = self.build_content_list()
+            self._cursor.content = self.build_content_list()
             self._cursor.index = 0
 
     def out(self):
@@ -185,7 +184,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.artist_list
             }
             self._cursor.layer = higher_layer[self._cursor.layer]
-            self._content = self.build_content_list()
+            self._cursor.content = self.build_content_list()
             self._cursor.index = self._derive_cursor_index()
 
     def _derive_cursor_index(self) -> int:
@@ -194,7 +193,7 @@ class Navigation:
             ContentLayer.album_list: self._cursor.current_album
         }
         try:
-            db_references = [e.db_reference for e in self._content.elements]
+            db_references = [e.db_reference for e in self._cursor.content.elements]
             index_in_database_elements = db_references.index(lookup_map[self._cursor.layer])
             return index_in_database_elements
         except IndexError:

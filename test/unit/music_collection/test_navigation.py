@@ -15,12 +15,12 @@ class Artist:
 
 
 @pytest.fixture
-def nav():
+def nav(db):
     class Database:
         @staticmethod
         def get_all_artists():
             return []
-    db = Database()
+    # db = Database()
     yield Navigation({}, db)
 
 
@@ -54,12 +54,12 @@ def test_load_artists(nav: Navigation, mocker: MockFixture) -> None:
 
 
 def test_update_list_slice(nav: Navigation) -> None:
-    fake = Faker()
-    lentgh_fake_names: int = 10
-    fake_names = [fake.name() for i in range(lentgh_fake_names)]
-    nav._content = Content(
-        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
-    for cursor in range(lentgh_fake_names):
+    # fake = Faker()
+    # lentgh_fake_names: int = 10
+    # fake_names = [fake.name() for i in range(lentgh_fake_names)]
+    # nav._content = Content(
+    #     content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
+    for cursor in range(5):
         nav._cursor.index = cursor
         ls = nav._update_list_slice()
         assert len(list(ls)) == nav._slice_size
