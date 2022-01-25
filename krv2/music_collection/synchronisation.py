@@ -28,18 +28,10 @@ class Synchronisation(Thread):
     def mount_remote_music_collection(self) -> None:
         if not Path("/etc/win-credentials").exists():
             raise SyncError("/etc/win-credentials doesn't exist.")
-
-        cfg_remote_collection = self._cfg_sync["remote_music_collection"]
-
-        smb_host = cfg_remote_collection["smb_host"]
-        remote_share_point_name = cfg_remote_collection["remote_share_point_name"]
-        local_mount_point = cfg_remote_collection["local_mount_point"]
-
-        cmd = f"mount -t cifs -o credentials=/etc/win-credentials //{smb_host}/{remote_share_point_name} {local_mount_point}"
-        LOG.info(f"mounting remote music collection with {cmd}")
-        cp = run(cmd.split(), stdout=PIPE, stderr=PIPE)
-        if cp.stderr:
-            raise SyncError(f"Partition could not be mounted: {str(cp.stderr)}")
+        cmd = "sudo mount -a"
+        p = run(cmd.split(), stdout=PIPE, stderr=PIPE)
+        if p.stderr:
+            LOG.error(p.stderr)
 
     def mirror_music_collection(self) -> None:
         local_music_collection_location = self._cfg_sync["local_music_collection"]["location"]
