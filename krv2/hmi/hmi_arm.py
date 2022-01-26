@@ -38,5 +38,7 @@ class HmiArm(Hmi):
 
     def start(self):
         while True:
-            self._mcp23017.poll()
+            buttons_pressed = self._mcp23017.poll()
+            for button in buttons_pressed:
+                self.button.emit(name=button)
             sleep(0.1)

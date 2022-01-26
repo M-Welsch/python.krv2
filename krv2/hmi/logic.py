@@ -22,6 +22,21 @@ class Logic:
         self.connect_signals()
         self._dis0 = self._hmi.dis0
         self.visualize_list_slice()
+        self._button_mapping = {
+            States.navigation: {
+                Buttons.enc0_sw: self._navigation.into,
+                Buttons.enc1_sw: lambda: None,
+                Buttons.button_back: self._navigation.out,
+                Buttons.button_pause_play: lambda: None,
+                Buttons.button_prev_song: lambda: None,
+                Buttons.button_next_song: lambda: None,
+                Buttons.button_shuffle_repeat: lambda: None,
+                Buttons.button_spare: lambda: None,
+                Buttons.button_next_source: lambda: None,
+                Buttons.dummy: lambda: None,
+                Buttons.button_exit: lambda: None,
+            }
+        }
         self._hmi.start()
 
     def connect_signals(self) -> None:
@@ -41,11 +56,9 @@ class Logic:
             self._navigation.into()
 
     def on_button_pressed(self, name, **kwargs):  # type: ignore
-        if self._state == States.navigation:
-            if name == Buttons.button_back:
-                self._navigation.out()
-            if name == Buttons.button_exit:
-                ...
+        name: Buttons
+        self._button_mapping[self._state][name]()
+        print(f"Button {name} pressed")
 
     def visualize_list_slice(self) -> None:
         fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)

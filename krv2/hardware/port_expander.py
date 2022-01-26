@@ -172,7 +172,8 @@ class MCP23017:
         LOG.debug(f"button pressed: {pressed_buttons}")
         return pressed_buttons
 
-    def _get_names_of_low_pins(self, register, port) -> list:
+    @staticmethod
+    def _get_names_of_low_pins(register, port) -> list:
         value = []
         if register & 128 == 0:
             value.append(f"GP{port}7")
