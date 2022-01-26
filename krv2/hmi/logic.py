@@ -1,9 +1,10 @@
 from enum import Enum
 
-from PIL import Image, ImageDraw, ImageFont
 from luma.core.render import canvas
+from PIL import Image, ImageDraw, ImageFont
+
 from krv2.hmi.hmi import Hmi
-from krv2.music_collection import Navigation, Database
+from krv2.music_collection import Database, Navigation
 
 
 class States(Enum):
@@ -48,7 +49,7 @@ class Logic:
         with canvas(self._dis0) as nav_display:
             posy = 0
             for line in self._navigation.current_slice:
-                #if line == self._nav.cursor_text:
+                # if line == self._nav.cursor_text:
                 #    self._place_cursor(nav_display, posy)
                 nav_display.text((5, posy), line, fill="white", font=fnt)
                 posy += 11

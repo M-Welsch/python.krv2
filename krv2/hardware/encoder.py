@@ -1,5 +1,10 @@
 from krv2.hardware.pin_interface import Pins
-from Encoder import Encoder
+
+try:
+    from Encoder import Encoder
+except RuntimeError:
+    print("RPi.GPIO is not available. Switching to mockup mode")
+    # from krv2.mockups.mockupgpio import GPIO
 
 
 class DrehDrueck:

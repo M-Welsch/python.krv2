@@ -1,20 +1,17 @@
+import logging
 from pathlib import Path
 from typing import List
 
 import mishmash.orm.core as mc
 from mishmash.orm import Album
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-import logging
+from sqlalchemy.orm import Session, sessionmaker
 
 LOG = logging.getLogger(__name__)
 
 
 class Database:
     def __init__(self, cfg_db: dict, verbose: bool = False):
-        print("cfg_dict <<<<<<<<<<<<<<<<<<<<<<<")
-        print(cfg_db)
         connect_str = f"sqlite:///{cfg_db['path']}"
         LOG.info(f"connecting to database with: {connect_str}")
         self._engine = create_engine(connect_str, echo=verbose)

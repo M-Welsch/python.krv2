@@ -1,1 +1,2 @@
-class CmusException(Exception): pass
+class CmusException(Exception):
+    pass

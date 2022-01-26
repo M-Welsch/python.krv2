@@ -1,4 +1,6 @@
-import sys, os
+import os
+import sys
+
 import pytest
 
 path_to_module = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,6 +14,7 @@ def volume_control():
     yield VolumeControl()
 
 
+@pytest.mark.onraspi
 def test_volume_control(volume_control):
     try:
         print("Sweeping Volume up and down. Cancel with Ctrl+C")

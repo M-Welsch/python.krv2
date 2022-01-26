@@ -1,6 +1,7 @@
+import os
+import sys
 from time import sleep
 
-import sys, os
 import pytest
 
 path_to_module = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -14,6 +15,7 @@ def encoder():
     yield DrehDrueck()
 
 
+@pytest.mark.onraspi
 def test_encoder_readout(encoder):
     try:
         while True:

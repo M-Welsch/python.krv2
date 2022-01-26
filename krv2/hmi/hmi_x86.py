@@ -1,9 +1,10 @@
+import sys
+
+from PIL import ImageDraw
 from PIL.Image import Image
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtGui import QPixmap
-import sys
 from signalslot import Signal
-from PIL import ImageDraw
 
 from krv2.hmi.hmi import Hmi
 
@@ -33,32 +34,32 @@ class HmiX86(Hmi):
 
 
 class Ui(QtWidgets.QMainWindow):
-    enc0 = Signal(args=['amount'])
+    enc0 = Signal(args=["amount"])
     enc0_sw = Signal()
-    enc1 = Signal(args=['amount'])
+    enc1 = Signal(args=["amount"])
     enc1_sw = Signal()
-    button = Signal(args=['name'])
+    button = Signal(args=["name"])
 
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi('krv2/mockups/frontplate_conf.ui', self)
+        uic.loadUi("krv2/mockups/frontplate_conf.ui", self)
 
-        self.pb_Source = self.findChild(QtWidgets.QPushButton, 'PB_Source')
-        self.pb_PausePlay = self.findChild(QtWidgets.QPushButton, 'PB_PausePlay')
-        self.pb_Previous = self.findChild(QtWidgets.QPushButton, 'PB_Previous')
-        self.pb_randRep = self.findChild(QtWidgets.QPushButton, 'PB_randRep')
-        self.pb_Spare = self.findChild(QtWidgets.QPushButton, 'PB_Spare')
-        self.pb_Back = self.findChild(QtWidgets.QPushButton, 'PB_Back')
-        self.pb_Next = self.findChild(QtWidgets.QPushButton, 'PB_Next')
-        self.pb_enc0_down = self.findChild(QtWidgets.QPushButton, 'PB_enc0_down')
-        self.pb_enc0_up = self.findChild(QtWidgets.QPushButton, 'PB_enc0_up')
-        self.pb_enc0_sw = self.findChild(QtWidgets.QPushButton, 'PB_enc0_sw')
-        self.pb_enc1_up = self.findChild(QtWidgets.QPushButton, 'PB_enc1_up')
-        self.pb_enc1_down = self.findChild(QtWidgets.QPushButton, 'PB_enc1_down')
-        self.pb_enc1_sw = self.findChild(QtWidgets.QPushButton, 'PB_enc1_sw')
+        self.pb_Source = self.findChild(QtWidgets.QPushButton, "PB_Source")
+        self.pb_PausePlay = self.findChild(QtWidgets.QPushButton, "PB_PausePlay")
+        self.pb_Previous = self.findChild(QtWidgets.QPushButton, "PB_Previous")
+        self.pb_randRep = self.findChild(QtWidgets.QPushButton, "PB_randRep")
+        self.pb_Spare = self.findChild(QtWidgets.QPushButton, "PB_Spare")
+        self.pb_Back = self.findChild(QtWidgets.QPushButton, "PB_Back")
+        self.pb_Next = self.findChild(QtWidgets.QPushButton, "PB_Next")
+        self.pb_enc0_down = self.findChild(QtWidgets.QPushButton, "PB_enc0_down")
+        self.pb_enc0_up = self.findChild(QtWidgets.QPushButton, "PB_enc0_up")
+        self.pb_enc0_sw = self.findChild(QtWidgets.QPushButton, "PB_enc0_sw")
+        self.pb_enc1_up = self.findChild(QtWidgets.QPushButton, "PB_enc1_up")
+        self.pb_enc1_down = self.findChild(QtWidgets.QPushButton, "PB_enc1_down")
+        self.pb_enc1_sw = self.findChild(QtWidgets.QPushButton, "PB_enc1_sw")
 
-        self.qV_dis0 = self.findChild(QtWidgets.QGraphicsView, 'gV_dis0')
-        self.qV_dis1 = self.findChild(QtWidgets.QGraphicsView, 'gV_dis1')
+        self.qV_dis0 = self.findChild(QtWidgets.QGraphicsView, "gV_dis0")
+        self.qV_dis1 = self.findChild(QtWidgets.QGraphicsView, "gV_dis1")
 
         self.pb_Source.clicked.connect(self.slot_pb_Source)
         self.pb_PausePlay.clicked.connect(self.slot_pb_PausePlay)
@@ -77,14 +78,14 @@ class Ui(QtWidgets.QMainWindow):
         self.show()
 
     def update_dis0(self):
-        pix = QPixmap('pil.png')
+        pix = QPixmap("pil.png")
         item = QtWidgets.QGraphicsPixmapItem(pix)
         scene = QtWidgets.QGraphicsScene(self)
         scene.addItem(item)
         self.qV_dis0.setScene(scene)
 
     def update_dis1(self):
-        pix = QPixmap('pil.png')
+        pix = QPixmap("pil.png")
         item = QtWidgets.QGraphicsPixmapItem(pix)
         scene = QtWidgets.QGraphicsScene(self)
         scene.addItem(item)

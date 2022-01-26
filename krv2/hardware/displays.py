@@ -1,16 +1,16 @@
-from time import sleep
-from PIL import ImageDraw
 from threading import Thread
+from time import sleep
 
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
+from PIL import ImageDraw
 
 
 class Displays:
     def __init__(self):
-        serial0 = i2c(port=1, address=0x3c)
-        serial1 = i2c(port=1, address=0x3d)
+        serial0 = i2c(port=1, address=0x3C)
+        serial1 = i2c(port=1, address=0x3D)
         self._display0 = sh1106(serial0)
         self._display1 = sh1106(serial1)
 

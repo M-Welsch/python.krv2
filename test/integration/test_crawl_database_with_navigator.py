@@ -1,11 +1,11 @@
 from pathlib import Path
+from test.mockups import create_fake_db_entries
+
 import pytest
 
 from krv2.music_collection import Navigation
 from krv2.music_collection.database import Database, mc
-from krv2.music_collection.navigation import ContentLayer, ContentElement
-from test.mockups import create_fake_db_entries
-
+from krv2.music_collection.navigation import ContentElement, ContentLayer
 
 AMOUNT_ARTISTS = 5
 ALBUMS_PER_ARTIST = 5
@@ -16,8 +16,12 @@ TRACKS_PER_ALBUM = 5
 def nav():
     db = Database({"path": ":memory:"})
     mc.Base.metadata.create_all(db._engine)
-    create_fake_db_entries(db.session, amount_artists=AMOUNT_ARTISTS,
-                           albums_per_artist=ALBUMS_PER_ARTIST, tracks_per_album=TRACKS_PER_ALBUM)
+    create_fake_db_entries(
+        db.session,
+        amount_artists=AMOUNT_ARTISTS,
+        albums_per_artist=ALBUMS_PER_ARTIST,
+        tracks_per_album=TRACKS_PER_ALBUM,
+    )
     yield Navigation({}, db)
 
 
@@ -76,4 +80,3 @@ def test_traverse_database(nav: Navigation) -> None:
         nav.down()
         print(nav._cursor)
         nav.out()
-

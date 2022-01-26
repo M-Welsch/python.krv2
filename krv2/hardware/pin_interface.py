@@ -1,34 +1,23 @@
 from time import sleep
+
 try:
     import RPi.GPIO as GPIO
-except ImportError:
+except RuntimeError:
     print("RPi.GPIO is not available. Switching to mockup mode")
-    from mockups.mockupgpio import GPIO
-from collections import namedtuple
+    from krv2.mockups.mockupgpio import GPIO
+
 import logging
+from collections import namedtuple
 from pathlib import Path
 
 LOG = logging.getLogger(Path(__file__).name)
 
 
 class Pins:
-    enc0 = {
-        "a":4, # Pin 7
-        "b":17 # Pin 11
-    }
-    enc1 = {
-        "a": 27,  # Pin 13
-        "b": 22  # Pin 15
-    }
-    power = {
-        "en_front_usb_loadsw": 22,  # Pin 15
-        "nfault_front_usb_loadsw": 0  # Pin 27
-    }
-    pe = {
-        "mb_ninta": 23,  # Pin 16
-        "hmi_ninta": 24,  # Pin 18
-        "nrst": 25  # Pin 22
-    }
+    enc0 = {"a": 4, "b": 17}  # Pin 7  # Pin 11
+    enc1 = {"a": 27, "b": 22}  # Pin 13  # Pin 15
+    power = {"en_front_usb_loadsw": 22, "nfault_front_usb_loadsw": 0}  # Pin 15  # Pin 27
+    pe = {"mb_ninta": 23, "hmi_ninta": 24, "nrst": 25}  # Pin 16  # Pin 18  # Pin 22
 
 
 class PinInterface:

@@ -1,5 +1,11 @@
+echo "enabling i2c and spi interface"
+sudo raspi-config nonint do_i2c 0  # yes, 0 means "activating"!
+sudo raspi-config nonint do_spi 0  # yes, 0 means "activating"!
+
 sudo apt update
-sudo apt install python3-pip -y
+sudo apt install python3-pip cifs-utils libopenjp2-7 -y
+
+mkdir krv2/log
 
 pip install -r requirements/production.txt
 
@@ -8,8 +14,7 @@ git clone https://github.com/M-Welsch/MishMash.git
 cd MishMash
 sudo python setup.py install
 
-mkdir /media/ServerHDD
+sudo mkdir /media/NASHDD
 
-mkdir krv2/log
 echo "export PYTHONPATH=/home/pi/python.krv2" >> ~/.bashrc
 echo "you still need to create /etc/win-credentials with the smb credentials on the nas. See: https://linuxize.com/post/how-to-mount-cifs-windows-share-on-linux/"

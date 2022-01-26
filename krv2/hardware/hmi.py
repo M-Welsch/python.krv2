@@ -1,9 +1,10 @@
-from luma.core.render import canvas
+import json
 import logging
 from pathlib import Path
-from signalslot import Signal
-import json
+
+from luma.core.render import canvas
 from PIL import Image, ImageDraw, ImageFont
+from signalslot import Signal
 
 from krv2.hardware.displays import Displays
 from krv2.hardware.hid import HumanInterfaceDevice
@@ -12,7 +13,6 @@ LOG = logging.getLogger(Path(__file__).name)
 
 
 class HumanMachineInterface:
-
     def __init__(self, pin_interface):
         self._hid = HumanInterfaceDevice(pin_interface)
         self._hid.start()
@@ -27,7 +27,7 @@ class HumanMachineInterface:
 
     def _connect_signals(self):
         self._hid.enc0_value_changed.connect(self._nav.on_env_val_changed)
-        #self._nav.refresh_nav_display.connect(self.on_refresh_nav_display)
+        # self._nav.refresh_nav_display.connect(self.on_refresh_nav_display)
         self._hid.enc0_sw_pressed.connect(self._nav.on_enc0_pressed)
         self._hid.button_back_pressed.connect(self._nav.on_button_back_pressed)
 

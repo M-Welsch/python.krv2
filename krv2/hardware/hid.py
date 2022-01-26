@@ -1,13 +1,14 @@
-import threading
 import logging
+import threading
 from pathlib import Path
-from signalslot import Signal
 from time import sleep
+
+from signalslot import Signal
 
 LOG = logging.getLogger(Path(__file__).name)
 
-from krv2.hardware.port_expander import MCP23017
 from krv2.hardware.encoder import DrehDrueck
+from krv2.hardware.port_expander import MCP23017
 
 
 class HumanInterfaceDevice(threading.Thread):

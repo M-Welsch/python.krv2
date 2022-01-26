@@ -1,11 +1,10 @@
-import sys
-
 import logging
+import sys
+from test.mockups import create_fake_db_entries
 
 import pytest
 
 from krv2.music_collection.database import Database, mc
-from test.mockups import create_fake_db_entries
 
 
 def pytest_configure():
@@ -13,9 +12,9 @@ def pytest_configure():
     file_handler = logging.FileHandler(filename="test_logging_current.log")
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s: %(name)s: %(message)s',
-        datefmt='%m.%d.%Y %H:%M:%S',
-        handlers=[stdout_handler, file_handler]
+        format="%(asctime)s %(levelname)s: %(name)s: %(message)s",
+        datefmt="%m.%d.%Y %H:%M:%S",
+        handlers=[stdout_handler, file_handler],
     )
 
 

@@ -1,13 +1,13 @@
+from test.utils import derive_mock_string
 from typing import List
 
-from faker import Faker
 import pytest
+from faker import Faker
 from pytest_mock import MockFixture
 
 import krv2.music_collection
 from krv2.music_collection import Database
-from krv2.music_collection.navigation import Navigation, Content, ContentLayer, ContentElement
-from test.utils import derive_mock_string
+from krv2.music_collection.navigation import Content, ContentElement, ContentLayer, Navigation
 
 
 class Artist:
@@ -18,11 +18,6 @@ class Artist:
 
 @pytest.fixture
 def nav(db):
-    class Database:
-        @staticmethod
-        def get_all_artists():
-            return []
-    # db = Database()
     yield Navigation({}, db)
 
 
@@ -32,7 +27,8 @@ def nav_w_fake_content(nav):
     lengh_fake_names: int = 2
     fake_names = [fake.name() for i in range(lengh_fake_names)]
     nav._content = Content(
-        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
+        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names]
+    )
     nav._cursor.content = nav._content
     yield nav
 
@@ -119,7 +115,9 @@ def test_into(nav: Navigation, mocker: MockFixture) -> None:
 
 def test_out(nav: Navigation, mocker: MockFixture) -> None:
     m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.build_content_list))
-    m_derivate_cursor_index = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Navigation._derive_cursor_index))
+    m_derivate_cursor_index = mocker.patch(
+        derive_mock_string(krv2.music_collection.navigation.Navigation._derive_cursor_index)
+    )
     nav._cursor.layer = ContentLayer.track_list
 
     nav.out()

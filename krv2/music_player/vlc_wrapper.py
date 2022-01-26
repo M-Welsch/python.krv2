@@ -1,11 +1,12 @@
-import vlc
 from pathlib import Path
 from random import randint
+
+import vlc
 
 
 class VlcWrapper:
     def __init__(self):
-        self._instance = vlc.Instance(['--no-xlib'])
+        self._instance = vlc.Instance(["--no-xlib"])
         self._list_player = self._instance.media_list_player_new()
         self._player = self._list_player.get_media_player()
         self._shuffle = False
@@ -32,7 +33,10 @@ class VlcWrapper:
         self._shuffle = False
 
     def pause_play(self):
-        if self._list_player.get_state() == vlc.State.NothingSpecial or self._list_player.get_state() == vlc.State.Paused:
+        if (
+            self._list_player.get_state() == vlc.State.NothingSpecial
+            or self._list_player.get_state() == vlc.State.Paused
+        ):
             self._list_player.play()
         else:
             self._list_player.pause()
@@ -52,7 +56,7 @@ class VlcWrapper:
             "Genre": media.get_meta(2),
             "Album": media.get_meta(4),
             "Track": media.get_meta(5),
-            "Year": media.get_meta(8)
+            "Year": media.get_meta(8),
         }
 
     def get_position(self) -> float:

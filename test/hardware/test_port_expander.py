@@ -1,15 +1,15 @@
+import os
+import sys
 from time import sleep
 
-import sys, os
 import pytest
 
 path_to_module = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(path_to_module)
 print(path_to_module)
 
-from krv2.hardware.port_expander import MCP23017
 from krv2.hardware.pin_interface import PinInterface
-
+from krv2.hardware.port_expander import MCP23017
 
 outputs = [
     "GPA0",
@@ -27,8 +27,9 @@ outputs = [
     "GPB4",
     "GPB5",
     "GPB6",
-    "GPB7"
+    "GPB7",
 ]
+
 
 @pytest.fixture(scope="class")
 def mcp():
@@ -37,8 +38,8 @@ def mcp():
     yield mcp23017
 
 
+@pytest.mark.onraspi
 class TestMCP23017:
-
     @staticmethod
     @pytest.mark.skip("never run such a test if any driver is connected to the pe's GP pins!")
     def test_outputs(mcp):
@@ -51,9 +52,9 @@ class TestMCP23017:
     @staticmethod
     def test_input(mcp):
         mcp.set_direction_porta(0xFF)
-        mcp.set_pullups_porta(0xff)
+        mcp.set_pullups_porta(0xFF)
         mcp.set_direction_portb(0xFF)
-        mcp.set_pullups_portb(0xff)
+        mcp.set_pullups_portb(0xFF)
         try:
             while True:
                 print(mcp.read_input())

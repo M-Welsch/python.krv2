@@ -1,11 +1,10 @@
-from enum import Enum
-
-from typing import Union, Type, List, Optional
 import logging
+from enum import Enum
+from typing import List, Optional, Type, Union
+
+from mishmash.orm.core import Album, Artist, Track
 
 from krv2.music_collection import Database
-from mishmash.orm.core import Track, Artist, Album
-
 
 LOG = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class Cursor:
         return self._content
 
     @content.setter
-    def content(self, content) -> None:
+    def content(self, content: Content) -> None:
         self._content = content
         self.refresh_current_elements()
 
@@ -77,14 +76,16 @@ class Cursor:
             self.index += 1
             self.refresh_current_elements()
             return True
+        return False
 
     def decrement(self) -> bool:
         if self.index > 0:
             self.index -= 1
             self.refresh_current_elements()
             return True
+        return False
 
-    def refresh_current_elements(self):
+    def refresh_current_elements(self) -> None:
         if self.layer == ContentLayer.artist_list:
             self.current_artist = self.content.elements[self.index].db_reference
         elif self.layer == ContentLayer.album_list:
@@ -96,7 +97,7 @@ class Cursor:
         content_buildup_instructions = {
             ContentLayer.artist_list: self._load_artists,
             ContentLayer.album_list: self._load_albums_of_artist,
-            ContentLayer.track_list: self._load_tracks_of_album
+            ContentLayer.track_list: self._load_tracks_of_album,
         }
         elements = content_buildup_instructions[self.layer]()
         content = Content(content_elements=elements)
@@ -108,19 +109,13 @@ class Cursor:
         elements = [ContentElement(caption=artist.name, db_reference=artist) for artist in artists]
         return elements
 
-    def _load_albums_of_artist(self) -> Optional[List[ContentElement]]:
-        if self.layer == ContentLayer.album_list:
-            albums: List[Album] = self._db.get_albums_of_artist(self.current_artist)
-            return [ContentElement(caption=album.title, db_reference=album) for album in albums]
-        else:
-            LOG.warning("will not load album list")
+    def _load_albums_of_artist(self) -> List[ContentElement]:
+        albums: List[Album] = self._db.get_albums_of_artist(self.current_artist)
+        return [ContentElement(caption=album.title, db_reference=album) for album in albums]
 
     def _load_tracks_of_album(self) -> List[ContentElement]:
-        if self.layer == ContentLayer.track_list:
-            tracks: List[Track] = self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
-            return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
-        else:
-            LOG.warning("will not load track list")
+        tracks: List[Track] = self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
+        return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
 
 
 class Navigation:
@@ -147,36 +142,36 @@ class Navigation:
         if cursor < 3:
             return range(slice_size)
         elif cursor > (maximum - 3):
-            return range(maximum-slice_size, maximum)
+            return range(maximum - slice_size, maximum)
         else:
-            return range(cursor-2, cursor+3)
+            return range(cursor - 2, cursor + 3)
 
-    def up(self):
+    def up(self) -> None:
         if self._cursor.decrement():
             self._update_list_slice()
             print(self._cursor)
 
-    def down(self):
+    def down(self) -> None:
         if self._cursor.increment():
             self._update_list_slice()
             print(self._cursor)
 
-    def into(self):
+    def into(self) -> None:
         if not self._cursor.layer == ContentLayer.track_list:
             lower_layer = {
                 ContentLayer.artist_list: ContentLayer.album_list,
-                ContentLayer.album_list: ContentLayer.track_list
+                ContentLayer.album_list: ContentLayer.track_list,
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
             self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = 0
             print(self._cursor)
 
-    def out(self):
+    def out(self) -> None:
         if not self._cursor.layer == ContentLayer.artist_list:
             higher_layer = {
                 ContentLayer.track_list: ContentLayer.album_list,
-                ContentLayer.album_list: ContentLayer.artist_list
+                ContentLayer.album_list: ContentLayer.artist_list,
             }
             self._cursor.layer = higher_layer[self._cursor.layer]
             self._cursor.content = self._cursor.build_content_list()
@@ -186,7 +181,7 @@ class Navigation:
     def _derive_cursor_index(self) -> int:
         lookup_map = {
             ContentLayer.artist_list: self._cursor.current_artist,
-            ContentLayer.album_list: self._cursor.current_album
+            ContentLayer.album_list: self._cursor.current_album,
         }
         try:
             db_references = [e.db_reference for e in self._cursor.content.elements]

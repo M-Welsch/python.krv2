@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 from threading import Thread
-
 
 LOG = logging.getLogger(__name__)
 
 
-class SyncError(Exception): pass
+class SyncError(Exception):
+    pass
 
 
 class Synchronisation(Thread):
