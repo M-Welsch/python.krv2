@@ -3,7 +3,6 @@ import sys
 from PIL import ImageDraw
 from PIL import Image
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtGui import QPixmap, QImage
 from signalslot import Signal
 
 from krv2.hmi.hmi import Hmi
@@ -24,16 +23,6 @@ class HmiX86(Hmi):
 
     def connect_internal_signals(self):
         self.update_display.connect(self._window.update_dis)
-
-    @property
-    def dis0(self) -> ImageDraw.Draw:
-        im = Image.new(mode="RGB", size=(128, 64), color=0)
-        return ImageDraw.Draw(im)
-
-    @property
-    def dis1(self) -> ImageDraw.Draw:
-        im = Image.new(mode="RGB", size=(128, 64), color=0)
-        return ImageDraw.Draw(im)
 
     def start(self):
         self._app.exec_()

@@ -15,13 +15,5 @@ class Hmi:
     def start(self):
         raise RuntimeError("implement start-method in the respective hmi subclass!")
 
-    @property
-    def dis0(self) -> ImageDraw.Draw:
-        return ImageDraw.Draw(Image())
-
-    @property
-    def dis1(self) -> ImageDraw.Draw:
-        return ImageDraw.Draw(Image())
-
     def show_on_display(self, display_index: int, image: Image):
         raise RuntimeError("implement start-method in the respective hmi subclass!")

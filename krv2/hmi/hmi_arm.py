@@ -30,14 +30,6 @@ class HmiArm(Hmi):
             1: display1
         }
 
-    @property
-    def dis0(self) -> ImageDraw.Draw:
-        return self._display[0]
-
-    @property
-    def dis1(self) -> ImageDraw.Draw:
-        return self._display[1]
-
     def connect_signals(self):
         pass
 

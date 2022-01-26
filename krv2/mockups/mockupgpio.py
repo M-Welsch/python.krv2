@@ -25,3 +25,4 @@ class GPIO:
     PUD_UP = "Pullup"
     LOW = 0
     HIGH = 1
+    BCM = 1
