@@ -1,3 +1,5 @@
+from time import sleep
+
 from PIL import ImageDraw
 from PIL.Image import Image
 from signalslot import Signal
@@ -11,7 +13,7 @@ class Hmi:
     button = Signal(args=["name"])
 
     def start(self):
-        pass
+        raise RuntimeError("implement start-method in the respective hmi subclass!")
 
     @property
     def dis0(self) -> ImageDraw.Draw:

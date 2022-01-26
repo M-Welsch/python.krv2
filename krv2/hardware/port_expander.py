@@ -1,11 +1,12 @@
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 from smbus2 import SMBus
 
-LOG = logging.getLogger(Path(__file__).name)
+LOG = logging.getLogger(__file__)
 
 
 class PortExpander:
@@ -70,47 +71,61 @@ class OutputValue:
     low: int = 0
 
 
+class Buttons(Enum):
+    enc0_sw = 0
+    enc1_sw = 1
+    button_back = 2
+    button_pause_play = 3
+    button_prev_song = 4
+    button_next_song = 5
+    button_shuffle_repeat = 6
+    button_spare = 7
+    button_next_source = 8
+    dummy = 9
+    button_exit = 10
+
+
 Pin = namedtuple("Pin", "port bit name dir default pullup interrupt")
 
 
 Pins = {
-    "GPB0": Pin(port="B", bit=0, name="enc0_sw", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPB1": Pin(port="B", bit=1, name="enc1_sw", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPB0": Pin(port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPB1": Pin(port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
     "GPB2": Pin(
-        port="B", bit=2, name="button_back", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=2, name=Buttons.button_back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB3": Pin(
-        port="B", bit=3, name="button_pause_play", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=3, name=Buttons.button_pause_play, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB4": Pin(
-        port="B", bit=4, name="button_prev_song", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=4, name=Buttons.button_prev_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB5": Pin(
-        port="B", bit=5, name="button_next_song", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=5, name=Buttons.button_next_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB6": Pin(
         port="B",
         bit=6,
-        name="button_shuffle_repeat",
+        name=Buttons.button_shuffle_repeat,
         dir=Dir.input,
         default=OutputValue.high,
         pullup=True,
         interrupt=True,
     ),
     "GPB7": Pin(
-        port="B", bit=7, name="button_spare", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=7, name=Buttons.button_spare, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPA0": Pin(
-        port="A", bit=0, name="button_next_source", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="A", bit=0, name=Buttons.button_next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
-    "GPA1": Pin(port="A", bit=1, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA2": Pin(port="A", bit=2, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA3": Pin(port="A", bit=3, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA4": Pin(port="A", bit=4, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA5": Pin(port="A", bit=5, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA6": Pin(port="A", bit=6, name="dummy", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA1": Pin(port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA2": Pin(port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA3": Pin(port="A", bit=3, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA4": Pin(port="A", bit=4, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA5": Pin(port="A", bit=5, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA6": Pin(port="A", bit=6, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
     "GPA7": Pin(
-        port="A", bit=7, name="button_exit", dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="A", bit=7, name=Buttons.button_exit, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
 }
 
@@ -154,6 +169,7 @@ class MCP23017:
             low_values.extend(self._get_names_of_low_pins(input_register_b, "B"))
             for low_value in low_values:
                 pressed_buttons.append(Pins[low_value].name)
+        LOG.debug(f"button pressed: {pressed_buttons}")
         return pressed_buttons
 
     def _get_names_of_low_pins(self, register, port) -> list:

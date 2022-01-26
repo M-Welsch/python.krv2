@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from krv2.hmi.hmi import Hmi
 from krv2.music_collection import Database, Navigation
+from krv2.hardware.port_expander import Buttons
 
 
 class States(Enum):
@@ -19,9 +20,9 @@ class Logic:
         self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], db=self._db)
         self._state = States.navigation
         self.connect_signals()
-        self._hmi.start()
         self._dis0 = self._hmi.dis0
         self.visualize_list_slice()
+        self._hmi.start()
 
     def connect_signals(self) -> None:
         self._hmi.enc0.connect(self.on_enc_movement)
@@ -41,8 +42,10 @@ class Logic:
 
     def on_button_pressed(self, name, **kwargs):  # type: ignore
         if self._state == States.navigation:
-            if name == "button_back":
+            if name == Buttons.button_back:
                 self._navigation.out()
+            if name == Buttons.button_exit:
+                ...
 
     def visualize_list_slice(self) -> None:
         fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)

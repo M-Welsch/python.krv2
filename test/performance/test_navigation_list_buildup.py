@@ -17,10 +17,10 @@ def test_db_buildup():
     duration = time() - begin
     print(f"scan of {TEST_DB_PATH} took {duration:.1f} seconds")
 
-
 # Results on raspi3 (same Music collection snapshot)
 # wtest_db_buildup: 44.3s
 # mishmash solo: 39.5s
+
 
 @pytest.mark.performance
 def test_list_buildup_speed():

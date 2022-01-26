@@ -16,5 +16,6 @@ sudo python setup.py install
 
 sudo mkdir /media/NASHDD
 
-echo "export PYTHONPATH=/home/pi/python.krv2" >> ~/.bashrc
+echo 'export PYTHONPATH="${PYTHONPATH}:/home/pi/python.krv2"' >> ~/.bashrc
+echo 'alias pytest-sw="python -m pytest -m \"not performance and not onraspi\""' >> ~/.bashrc
 echo "you still need to create /etc/win-credentials with the smb credentials on the nas. See: https://linuxize.com/post/how-to-mount-cifs-windows-share-on-linux/"

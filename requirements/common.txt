@@ -2,5 +2,4 @@ signalslot
 python-vlc
 luma.core
 luma.oled
-MishMash
 Encoder
