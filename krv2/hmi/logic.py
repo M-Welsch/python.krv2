@@ -62,13 +62,15 @@ class Logic:
 
     def visualize_list_slice(self) -> None:
         fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)
-        with canvas(self._dis0) as nav_display:
-            posy = 0
-            for line in self._navigation.current_slice:
-                # if line == self._nav.cursor_text:
-                #    self._place_cursor(nav_display, posy)
-                nav_display.text((5, posy), line, fill="white", font=fnt)
-                posy += 11
+        display_content = Image.new(mode="1", size=(128, 64), color=0)
+        canvas = ImageDraw.Draw(display_content)
+        posy = 0
+        for line in self._navigation.current_slice:
+            # if line == self._nav.cursor_text:
+            #    self._place_cursor(nav_display, posy)
+            canvas.text((5, posy), line, fill="white", font=fnt)
+            posy += 11
+        self._hmi.show_on_display(0, display_content)
 
     def _place_cursor(self, nav_display, posy):
         nav_display.rectangle(xy=[0, posy + 4, 2, posy + 6], fill="white")

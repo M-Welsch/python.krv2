@@ -4,6 +4,7 @@ from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
 from PIL import ImageDraw
+from PIL import Image
 from signalslot import Signal
 
 from krv2.hardware.pin_interface import PinInterface
@@ -22,16 +23,20 @@ class HmiArm(Hmi):
         pin_interface = PinInterface()
         self._mcp23017 = MCP23017(0x20, pin_interface)
         self._mcp23017.setup_pe_defaults()
-        self._display0 = sh1106(i2c(port=1, address=0x3C))
-        self._display1 = sh1106(i2c(port=1, address=0x3D))
+        display0 = sh1106(i2c(port=1, address=0x3C))
+        display1 = sh1106(i2c(port=1, address=0x3D))
+        self._display = {
+            0: display0,
+            1: display1
+        }
 
     @property
     def dis0(self) -> ImageDraw.Draw:
-        return self._display0
+        return self._display[0]
 
     @property
     def dis1(self) -> ImageDraw.Draw:
-        return self._display1
+        return self._display[1]
 
     def connect_signals(self):
         pass
@@ -42,3 +47,7 @@ class HmiArm(Hmi):
             for button in buttons_pressed:
                 self.button.emit(name=button)
             sleep(0.1)
+
+    def show_on_display(self, display_index: int, image: Image.Image):
+        with canvas(device=self._display[display_index], background=image) as nav_display:
+            pass

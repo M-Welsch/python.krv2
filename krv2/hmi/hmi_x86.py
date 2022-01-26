@@ -1,15 +1,17 @@
 import sys
 
 from PIL import ImageDraw
-from PIL.Image import Image
+from PIL import Image
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage
 from signalslot import Signal
 
 from krv2.hmi.hmi import Hmi
 
 
 class HmiX86(Hmi):
+    update_display = Signal(args=["index", "image"])
+
     def __init__(self):
         self._app = QtWidgets.QApplication(sys.argv)
         self._window = Ui()
@@ -18,19 +20,26 @@ class HmiX86(Hmi):
         self.enc1 = self._window.enc1
         self.enc1_sw = self._window.enc1_sw
         self.button = self._window.button
+        self.connect_internal_signals()
+
+    def connect_internal_signals(self):
+        self.update_display.connect(self._window.update_dis)
 
     @property
     def dis0(self) -> ImageDraw.Draw:
-        im = Image()
+        im = Image.new(mode="RGB", size=(128, 64), color=0)
         return ImageDraw.Draw(im)
 
     @property
     def dis1(self) -> ImageDraw.Draw:
-        im = Image()
+        im = Image.new(mode="RGB", size=(128, 64), color=0)
         return ImageDraw.Draw(im)
 
     def start(self):
         self._app.exec_()
+
+    def show_on_display(self, display_index: int, image: Image.Image):
+        self.update_display.emit(index=display_index, image=image)
 
 
 class Ui(QtWidgets.QMainWindow):
@@ -77,19 +86,16 @@ class Ui(QtWidgets.QMainWindow):
 
         self.show()
 
-    def update_dis0(self):
-        pix = QPixmap("pil.png")
+    def update_dis(self, index, image, *args, **kwargs):  # type: ignore
+        print("show")
+        pix = image.toqpixmap()
         item = QtWidgets.QGraphicsPixmapItem(pix)
         scene = QtWidgets.QGraphicsScene(self)
         scene.addItem(item)
-        self.qV_dis0.setScene(scene)
-
-    def update_dis1(self):
-        pix = QPixmap("pil.png")
-        item = QtWidgets.QGraphicsPixmapItem(pix)
-        scene = QtWidgets.QGraphicsScene(self)
-        scene.addItem(item)
-        self.qV_dis1.setScene(scene)
+        if index == 0:
+            self.qV_dis0.setScene(scene)
+        elif index == 1:
+            self.qV_dis1.setScene(scene)
 
     def slot_pb_Source(self):
         print("PB_Source pressed")
