@@ -1,17 +1,7 @@
 from pathlib import Path
-from test.mockups import create_fake_db_entries
-
-import pytest
+from test.glob_fixtures import db
 
 from krv2.music_collection.database import Database, mc
-
-
-@pytest.fixture
-def db():
-    datab = Database({"path": ":memory:"})
-    mc.Base.metadata.create_all(datab._engine)
-    create_fake_db_entries(datab.session, amount_artists=5, albums_per_artist=5, tracks_per_album=5)
-    yield datab
 
 
 def test_get_all_artists(db: Database) -> None:

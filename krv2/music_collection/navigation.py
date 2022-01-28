@@ -95,7 +95,7 @@ class Cursor:
                 self.layer = ContentLayer.track_list
                 elements = self._load_tracks_of_artist()
         elif self.layer == ContentLayer.track_list:
-            elements = self._load_tracks_of_artist()
+            elements = self._load_tracks_of_album()
         content = Content(content_elements=elements)
         self.list_size = content.size
         return content
@@ -124,7 +124,7 @@ class Navigation:
     def current_slice(self) -> List[str]:  # Todo: test!
         current_slice_captions = []
         for item in self._update_list_slice():
-            current_slice_captions.append(self._cursor.content.elements[item].name)
+            current_slice_captions.append(self._cursor.content.elements[item])
         return current_slice_captions
 
     def _update_list_slice(self) -> range:
@@ -159,6 +159,7 @@ class Navigation:
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
             self._cursor.refresh_content()
+            self._cursor.refresh_current_elements()
             self._cursor.index = 0
             print(self._cursor)
 
@@ -179,7 +180,7 @@ class Navigation:
             ContentLayer.album_list: self._cursor.current_album,
         }
         try:
-            db_references = [e.db_reference for e in self._cursor.content.elements]
+            db_references = self._cursor.content.elements
             index_in_database_elements = db_references.index(lookup_map[self._cursor.layer])
             return index_in_database_elements
         except IndexError:
