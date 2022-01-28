@@ -1,8 +1,12 @@
+import pytest
 from datetime import datetime
-
 from sqlalchemy.orm import Session
 
-from krv2.music_collection.database import mc
+from krv2.music_collection.database import mc, Database
+
+AMOUNT_FAKE_ARTISTS = 5
+AMOUNT_FAKE_ALBUMS_PER_ARTIST = 5
+AMOUNT_FAKE_TRACKS_PER_ALBUM = 5
 
 
 def create_fake_db_entries(
@@ -39,3 +43,14 @@ def create_fake_db_entries(
         session.add_all(fake_albums)
     session.add_all(fake_artists)
     session.commit()
+
+
+@pytest.fixture
+def db():
+    datab = Database({"path": ":memory:"})
+    mc.Base.metadata.create_all(datab._engine)
+    create_fake_db_entries(
+        datab.session, amount_artists=AMOUNT_FAKE_ARTISTS,
+        albums_per_artist=AMOUNT_FAKE_ALBUMS_PER_ARTIST, tracks_per_album=AMOUNT_FAKE_TRACKS_PER_ALBUM
+    )
+    yield datab
