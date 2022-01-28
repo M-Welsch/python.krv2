@@ -9,14 +9,8 @@ from krv2.music_collection import Database
 LOG = logging.getLogger(__name__)
 
 
-class ContentElement:
-    def __init__(self, caption: str, db_reference: Union[Album, Artist, Track]):
-        self.name = caption
-        self.db_reference: Union[Album, Artist, Track] = db_reference
-
-
 class Content:
-    def __init__(self, content_elements: List[ContentElement]):
+    def __init__(self, content_elements: List[Union[Artist, Album, Track]]):
         self.elements = content_elements
         self.type = Type
         self.size: int = len(self.elements)
@@ -41,7 +35,7 @@ class Cursor:
         self._db = db
         self.index: int = index
         self.layer: ContentLayer = content_layer
-        self._content = self.build_content_list()
+        self._content = self.get_new_content()
         self.list_size: int = self._content.size
         self.refresh_current_elements()
 
@@ -49,13 +43,8 @@ class Cursor:
     def content(self) -> Content:
         return self._content
 
-    @content.setter
-    def content(self, content: Content) -> None:
-        self._content = content
-        self.refresh_current_elements()
-
     @property
-    def current(self) -> Optional[ContentElement]:
+    def current(self) -> Optional[Union[Artist, Album, Track]]:
         if self._content:
             return self._content.elements[self.index]
         else:
@@ -87,35 +76,41 @@ class Cursor:
 
     def refresh_current_elements(self) -> None:
         if self.layer == ContentLayer.artist_list:
-            self.current_artist = self.content.elements[self.index].db_reference
+            self.current_artist = self.content.elements[self.index]
         elif self.layer == ContentLayer.album_list:
-            self.current_album = self.content.elements[self.index].db_reference
+            self.current_album = self.content.elements[self.index]
         elif self.layer == ContentLayer.track_list:
-            self.current_track = self.content.elements[self.index].db_reference
+            self.current_track = self.content.elements[self.index]
 
-    def build_content_list(self) -> Content:
-        content_buildup_instructions = {
-            ContentLayer.artist_list: self._load_artists,
-            ContentLayer.album_list: self._load_albums_of_artist,
-            ContentLayer.track_list: self._load_tracks_of_album,
-        }
-        elements = content_buildup_instructions[self.layer]()
+    def refresh_content(self) -> None:
+        self._content = self.get_new_content()
+
+    def get_new_content(self) -> Content:
+        if self.layer == ContentLayer.artist_list:
+            elements = self._load_artists()
+        elif self.layer == ContentLayer.album_list:
+            if self.current_artist.albums:
+                elements = self._load_albums_of_artist()
+            else:  # album list can be empty (See issue #2). Load track list instead in that case
+                self.layer = ContentLayer.track_list
+                elements = self._load_tracks_of_artist()
+        elif self.layer == ContentLayer.track_list:
+            elements = self._load_tracks_of_artist()
         content = Content(content_elements=elements)
         self.list_size = content.size
         return content
 
-    def _load_artists(self) -> List[ContentElement]:
-        artists = self._db.get_all_artists()
-        elements = [ContentElement(caption=artist.name, db_reference=artist) for artist in artists]
-        return elements
+    def _load_artists(self) -> List[Artist]:
+        return self._db.get_all_artists()
 
-    def _load_albums_of_artist(self) -> List[ContentElement]:
-        albums: List[Album] = self._db.get_albums_of_artist(self.current_artist)
-        return [ContentElement(caption=album.title, db_reference=album) for album in albums]
+    def _load_albums_of_artist(self) -> List[Album]:
+        return self._db.get_albums_of_artist(self.current_artist)
 
-    def _load_tracks_of_album(self) -> List[ContentElement]:
-        tracks: List[Track] = self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
-        return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
+    def _load_tracks_of_album(self) -> List[Track]:
+        return self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
+
+    def _load_tracks_of_artist(self) -> List[Track]:
+        return self._db.get_tracks_of_artist(artist=self.current_artist)
 
 
 class Navigation:
@@ -163,7 +158,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.track_list,
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
-            self._cursor.content = self._cursor.build_content_list()
+            self._cursor.refresh_content()
             self._cursor.index = 0
             print(self._cursor)
 
@@ -174,7 +169,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.artist_list,
             }
             self._cursor.layer = higher_layer[self._cursor.layer]
-            self._cursor.content = self._cursor.build_content_list()
+            self._cursor.refresh_content()
             self._cursor.index = self._derive_cursor_index()
             print(self._cursor)
 

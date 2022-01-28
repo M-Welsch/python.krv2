@@ -3,6 +3,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import List
 
 from smbus2 import SMBus
 
@@ -160,7 +161,7 @@ class MCP23017:
 
         self.mirror_port_interrupts()
 
-    def poll(self) -> list:
+    def poll(self) -> List[str]:
         low_values = []
         pressed_buttons = []
         if self._pin_interface.pe_hmi_interrupt:

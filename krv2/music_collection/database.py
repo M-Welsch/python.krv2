@@ -59,5 +59,9 @@ class Database:
         return self.get_tracks_of_album_by_name(artist_name=artist.name, album_title=album.title)
 
     @staticmethod
+    def get_tracks_of_artist(artist: mc.Artist) -> List[mc.Track]:
+        return artist.tracks
+
+    @staticmethod
     def get_track_file_location(track: mc.Track) -> Path:
         return Path(track.path)

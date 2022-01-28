@@ -29,7 +29,7 @@ def nav_w_fake_content(nav):
     nav._content = Content(
         content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names]
     )
-    nav._cursor.content = nav._content
+    nav._cursor._content = nav._content
     yield nav
 
 
@@ -94,7 +94,7 @@ def test_up(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
 
 
 def test_into(nav: Navigation, mocker: MockFixture) -> None:
-    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.build_content_list))
+    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.refresh_content))
     assert nav._cursor.layer == ContentLayer.artist_list
     nav.into()
     assert nav._cursor.layer == ContentLayer.album_list
@@ -114,7 +114,7 @@ def test_into(nav: Navigation, mocker: MockFixture) -> None:
 
 
 def test_out(nav: Navigation, mocker: MockFixture) -> None:
-    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.build_content_list))
+    m_build_content_list = mocker.patch(derive_mock_string(krv2.music_collection.navigation.Cursor.refresh_content))
     m_derivate_cursor_index = mocker.patch(
         derive_mock_string(krv2.music_collection.navigation.Navigation._derive_cursor_index)
     )

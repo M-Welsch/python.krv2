@@ -1,6 +1,5 @@
 from enum import Enum
 
-from luma.core.render import canvas
 from PIL import Image, ImageDraw, ImageFont
 
 from krv2.hmi.hmi import Hmi
@@ -20,7 +19,6 @@ class Logic:
         self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], db=self._db)
         self._state = States.navigation
         self.connect_signals()
-        self._dis0 = self._hmi.dis0
         self.visualize_list_slice()
         self._button_mapping = {
             States.navigation: {
@@ -51,6 +49,7 @@ class Logic:
             elif amount > 0:
                 self._navigation.down()
 
+    # Fixme: include this into on_Button_pressed below!!!
     def on_enc0_sw_pressed(self, **kwargs):  # type: ignore
         if self._state == States.navigation:
             self._navigation.into()

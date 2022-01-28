@@ -3,3 +3,4 @@ python-vlc
 luma.core
 luma.oled
 Encoder
+Pillow
