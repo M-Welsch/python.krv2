@@ -7,7 +7,7 @@ from mpd import MPDClient, ConnectionError
 LOG = logging.getLogger(__name__)
 
 
-MPD_DEFAULT_HOST = "locahlost"
+MPD_DEFAULT_HOST = "localhost"
 MPD_DEFAULT_PORT = 6600
 MPD_DEFAULT_SOCKET = Path("/var/run/mpd/socket")
 MPD_DEFAULT_TIMEOUT = 10
@@ -31,6 +31,30 @@ class ConnectionParams:
         return c
 
 
+@dataclass
+class Stats:
+    uptime: int
+    playtime: int
+    artists: int
+    albums: int
+    songs: int
+    db_playtime: int
+    db_update: int
+
+    @classmethod
+    def from_client(cls, client: MPDClient):
+        stats = client.stats()
+        return cls(
+            uptime=int(stats["uptime"]),
+            playtime=int(stats["playtime"]),
+            artists=int(stats["artists"]),
+            albums=int(stats["albums"]),
+            songs=int(stats["songs"]),
+            db_playtime=int(stats["db_playtime"]),
+            db_update=int(stats["db_update"])
+        )
+
+
 def setup_client(conn_params: ConnectionParams) -> MPDClient:
     client = MPDClient()
     client.timeout = conn_params.timeout
@@ -52,8 +76,11 @@ class Mpd:
     def connect(self):
         self._client.connect(host=self._conn_params.host, port=self._conn_params.port)
 
-    def get_artist(self):
-        return [item["artist"] for item in self._client.list("artist")]
+    def get_artists(self):
+        return [item["artist"] for item in self._client.list("artist") if item["artist"]]
 
     def get_albums_of_artist(self, artist):
         return self._client.list(...)
+
+    def stats(self) -> Stats:
+        return Stats.from_client(self._client)
