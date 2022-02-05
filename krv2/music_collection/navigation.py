@@ -132,6 +132,10 @@ class Navigation:
             current_slice_captions.append(self._cursor.content.elements[item].name)
         return current_slice_captions
 
+    @property
+    def layer(self) -> ContentLayer:
+        return self._cursor.layer
+
     def _update_list_slice(self) -> range:
         cursor = self._cursor.index
         slice_size = self._slice_size

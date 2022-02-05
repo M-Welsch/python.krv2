@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 from krv2.hmi.hmi import Hmi
 from krv2.music_collection import Database, Navigation
 from krv2.hardware.port_expander import Buttons
+from krv2.music_collection.navigation import ContentLayer
 
 
 class States(Enum):
@@ -20,19 +21,18 @@ class Logic:
         self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], db=self._db)
         self._state = States.navigation
         self.connect_signals()
-        self._dis0 = self._hmi.dis0
         self.visualize_list_slice()
         self._button_mapping = {
             States.navigation: {
                 Buttons.enc0_sw: self._navigation.into,
                 Buttons.enc1_sw: lambda: None,
-                Buttons.button_back: self._navigation.out,
-                Buttons.button_pause_play: lambda: None,
-                Buttons.button_prev_song: lambda: None,
-                Buttons.button_next_song: lambda: None,
-                Buttons.button_shuffle_repeat: lambda: None,
-                Buttons.button_spare: lambda: None,
-                Buttons.button_next_source: lambda: None,
+                Buttons.back: self._navigation.out,
+                Buttons.pause_play: lambda: None,
+                Buttons.prev_song: lambda: None,
+                Buttons.next_song: lambda: None,
+                Buttons.shuffle_repeat: lambda: None,
+                Buttons.spare: lambda: None,
+                Buttons.next_source: lambda: None,
                 Buttons.dummy: lambda: None,
                 Buttons.button_exit: lambda: None,
             }
@@ -47,13 +47,16 @@ class Logic:
     def on_enc_movement(self, amount, **kwargs):  # type: ignore
         if self._state == States.navigation:
             if amount < 0:
-                self._navigation.up()
+                [self._navigation.up() for i in range(-amount)]
             elif amount > 0:
-                self._navigation.down()
+                [self._navigation.down() for i in range(amount)]
 
     def on_enc0_sw_pressed(self, **kwargs):  # type: ignore
         if self._state == States.navigation:
-            self._navigation.into()
+            if self._navigation.layer == ContentLayer.track_list:
+                self.on_button_pressed(name=Buttons.pause_play)
+            else:
+                self._navigation.into()
 
     def on_button_pressed(self, name, **kwargs):  # type: ignore
         name: Buttons

@@ -74,13 +74,13 @@ class OutputValue:
 class Buttons(Enum):
     enc0_sw = 0
     enc1_sw = 1
-    button_back = 2
-    button_pause_play = 3
-    button_prev_song = 4
-    button_next_song = 5
-    button_shuffle_repeat = 6
-    button_spare = 7
-    button_next_source = 8
+    back = 2
+    pause_play = 3
+    prev_song = 4
+    next_song = 5
+    shuffle_repeat = 6
+    spare = 7
+    next_source = 8
     dummy = 9
     button_exit = 10
 
@@ -92,31 +92,31 @@ Pins = {
     "GPB0": Pin(port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
     "GPB1": Pin(port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
     "GPB2": Pin(
-        port="B", bit=2, name=Buttons.button_back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=2, name=Buttons.back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB3": Pin(
-        port="B", bit=3, name=Buttons.button_pause_play, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=3, name=Buttons.pause_play, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB4": Pin(
-        port="B", bit=4, name=Buttons.button_prev_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=4, name=Buttons.prev_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB5": Pin(
-        port="B", bit=5, name=Buttons.button_next_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=5, name=Buttons.next_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB6": Pin(
         port="B",
         bit=6,
-        name=Buttons.button_shuffle_repeat,
+        name=Buttons.shuffle_repeat,
         dir=Dir.input,
         default=OutputValue.high,
         pullup=True,
         interrupt=True,
     ),
     "GPB7": Pin(
-        port="B", bit=7, name=Buttons.button_spare, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=7, name=Buttons.spare, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPA0": Pin(
-        port="A", bit=0, name=Buttons.button_next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="A", bit=0, name=Buttons.next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPA1": Pin(port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
     "GPA2": Pin(port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
