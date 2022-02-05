@@ -3,8 +3,9 @@ logic:
     path: mishmash.db
     create_tables_if_nonexistent: True
   navigation:
-    nada: niente
+    list_slice_size: 5
   mpd:
+    host: localhost
     port: 6600
     socket: /var/run/mpd/socket
 

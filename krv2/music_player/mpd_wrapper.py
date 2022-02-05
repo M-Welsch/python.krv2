@@ -1,55 +1,59 @@
 import logging
-from typing import Callable
+from dataclasses import dataclass
+from pathlib import Path
 
 from mpd import MPDClient, ConnectionError
 
 LOG = logging.getLogger(__name__)
 
 
-def connect(client, port):
-    client.connect("localhost", port)
+MPD_DEFAULT_HOST = "locahlost"
+MPD_DEFAULT_PORT = 6600
+MPD_DEFAULT_SOCKET = Path("/var/run/mpd/socket")
+MPD_DEFAULT_TIMEOUT = 10
 
 
-def outer(func):
-    def inner(*args, **kwargs):
-        try:
-            func()
-        except ConnectionError:
-            connect()
-            func()
-    return inner
+@dataclass
+class ConnectionParams:
+    host: str = MPD_DEFAULT_HOST
+    port: int = MPD_DEFAULT_PORT
+    socket: Path = MPD_DEFAULT_SOCKET
+    timeout: float = MPD_DEFAULT_TIMEOUT
 
-# https://www.geeksforgeeks.org/creating-decorator-inside-a-class-in-python/
+    @classmethod
+    def from_cfg(cls, cfg_mpd: dict):
+        c = cls()
+        for param in ["host", "port", "socket"]:
+            try:
+                setattr(c, param, cfg_mpd[param])
+            except KeyError:
+                print(f"MPD connection parameter {param} not in config file. Defaulting to {getattr(cls, param)}")
+        return c
+
+
+def setup_client(conn_params: ConnectionParams) -> MPDClient:
+    client = MPDClient()
+    client.timeout = conn_params.timeout
+    return client
 
 
 class Mpd:
     def __init__(self, cfg_mpd: dict):
-        self._client = self.setup_client(cfg_mpd)
+        self._conn_params = ConnectionParams.from_cfg(cfg_mpd)
+        self._client = setup_client(self._conn_params)
 
-    def setup_client(self, cfg_mpd: dict) -> MPDClient:
-        client = MPDClient()
-        try:
-            port = cfg_mpd["port"]
-        except KeyError:
-            port = 6600
-            LOG.warning(f"mpd port is not defined. Defaulting to {port}")
-        client.timeout = 10
-        connect(client, port)
-        return client
+    def __enter__(self):
+        self.connect()
+        return self
 
-    def safe_mpd_op(self, func: Callable):
-        try:
-            return func()
-        except ConnectionError:
-            connect(self._client, 6600)  # Fixme: hand over correct port
-            return self.safe_mpd_op(func)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._client.disconnect()
 
-    def _get_artist_query(self):
+    def connect(self):
+        self._client.connect(host=self._conn_params.host, port=self._conn_params.port)
+
+    def get_artist(self):
         return [item["artist"] for item in self._client.list("artist")]
-
-    def get_artists(self):
-        return self.safe_mpd_op(self._get_artist_query)
 
     def get_albums_of_artist(self, artist):
         return self._client.list(...)
-
