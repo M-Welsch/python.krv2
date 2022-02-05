@@ -28,3 +28,23 @@ def test_mpd_get_artists(mpd_wrapper: Mpd) -> None:
         artists = m.get_artists()
     assert isinstance(artists, list)
     assert len(artists) == no_artists
+
+
+def test_get_albums_of_artists(mpd_wrapper: Mpd) -> None:
+    with mpd_wrapper as m:
+        artist = m.get_artists()[0]
+    with mpd_wrapper as m:
+        albums = m.get_albums_of_artist(artist)
+        assert all([isinstance(album, str) for album in albums])
+
+
+def test_get_albums_of_all_artists(mpd_wrapper: Mpd) -> None:
+    with mpd_wrapper as m:
+        artists = m.get_artists()
+    for artist in artists:
+        with mpd_wrapper as m:
+            albums = m.get_albums_of_artist(artist)
+            assert all([isinstance(album, str) for album in albums])
+
+
+
