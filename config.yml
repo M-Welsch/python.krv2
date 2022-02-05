@@ -4,6 +4,9 @@ logic:
     create_tables_if_nonexistent: True
   navigation:
     nada: niente
+  mpd:
+    port: 6600
+    socket: /var/run/mpd/socket
 
 synchronisation:
   remote_music_collection:
