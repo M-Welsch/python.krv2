@@ -3,7 +3,7 @@ sudo raspi-config nonint do_i2c 0  # yes, 0 means "activating"!
 sudo raspi-config nonint do_spi 0  # yes, 0 means "activating"!
 
 sudo apt update
-sudo apt install python3-pip cifs-utils libopenjp2-7 -y
+sudo apt install python3-pip cifs-utils libopenjp2-7 mpd -y
 
 mkdir krv2/log
 

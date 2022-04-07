@@ -1,11 +1,11 @@
 import sys
 
-from PIL import ImageDraw
-from PIL import Image
+from PIL import Image, ImageDraw
 from PyQt5 import QtWidgets, uic
 from signalslot import Signal
 
 from krv2.hmi.hmi import Hmi
+from krv2.common.buttons import Buttons
 
 
 class HmiX86(Hmi):
@@ -88,27 +88,31 @@ class Ui(QtWidgets.QMainWindow):
 
     def slot_pb_Source(self):
         print("PB_Source pressed")
+        self.button.emit(name=Buttons.next_source)
 
     def slot_pb_PausePlay(self):
         print("PB_PausePlay pressed")
-        self.update_dis0()
-        self.update_dis1()
+        self.button.emit(name=Buttons.pause_play)
 
     def slot_pb_Previous(self):
         print("PB_Previous pressed")
+        self.button.emit(name=Buttons.prev_song)
 
     def slot_pb_Next(self):
         print("PB_Next pressed")
+        self.button.emit(name=Buttons.next_song)
 
     def slot_pb_randRep(self):
         print("PB_randRep pressed")
+        self.button.emit(name=Buttons.shuffle_repeat)
 
     def slot_pb_Spare(self):
         print("PB_Spare pressed")
+        self.button.emit(name=Buttons.spare)
 
     def slot_pb_Back(self):
         print("PB_Back pressed")
-        self.button.emit(name="button_back")
+        self.button.emit(name=Buttons.back)
 
     def slot_pb_enc0_up(self):
         print("PB_enc0_up pressed")
@@ -120,7 +124,7 @@ class Ui(QtWidgets.QMainWindow):
 
     def slot_pb_enc0_sw(self):
         print("PB_enc0_sw pressed")
-        self.enc0_sw.emit()
+        self.button.emit(name=Buttons.enc0_sw)
 
     def slot_pb_enc1_up(self):
         print("PB_enc1_up pressed")
@@ -132,4 +136,4 @@ class Ui(QtWidgets.QMainWindow):
 
     def slot_pb_enc1_sw(self):
         print("PB_enc1_sw pressed")
-        self.enc1_sw.emit()
+        self.button.emit(name=Buttons.enc1_sw)

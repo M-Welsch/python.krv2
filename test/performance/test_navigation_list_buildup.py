@@ -1,12 +1,13 @@
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 from time import time
+
 import pytest
 
 from krv2.music_collection import Database, Navigation
 
-TEST_DB_PATH = Path.cwd()/"test/test_mishmash.db"
-MUSIC_LIB_DIR = Path.cwd().parent/"Music"
+TEST_DB_PATH = Path.cwd() / "test/test_mishmash.db"
+MUSIC_LIB_DIR = Path.cwd().parent / "Music"
 
 
 @pytest.mark.performance
@@ -16,6 +17,7 @@ def test_db_buildup():
     p = run(cmd.split(), stdout=PIPE)
     duration = time() - begin
     print(f"scan of {TEST_DB_PATH} took {duration:.1f} seconds")
+
 
 # Results on raspi3 (same Music collection snapshot)
 # wtest_db_buildup: 44.3s
@@ -29,5 +31,6 @@ def test_list_buildup_speed():
     nav = Navigation({}, db)
     duration = time() - begin
     print(f"listing all artists of {TEST_DB_PATH} took {duration:.1f} seconds")
+
 
 # 0.1s for 1039 tracks (about 6 Artists)

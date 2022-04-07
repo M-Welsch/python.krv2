@@ -11,8 +11,10 @@ LOG = logging.getLogger(__name__)
 
 
 def setup_logger(cfg_log: dict) -> None:
+    log_path = Path(cfg_log["path"])
+    log_path.mkdir(exist_ok=True)
     logging.basicConfig(
-        filename=Path(cfg_log["path"]) / datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"),
+        filename=log_path / datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"),
         level=logging.DEBUG,
         format="%(asctime)s %(levelname)s: %(name)s: %(message)s",
         datefmt="%m.%d.%Y %H:%M:%S",

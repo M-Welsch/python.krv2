@@ -4,3 +4,5 @@ luma.core
 luma.oled
 Encoder
 python-mpd2
+pillow
+pyqt5

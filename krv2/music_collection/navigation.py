@@ -1,18 +1,18 @@
 import logging
 from enum import Enum
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Type
 
-from mishmash.orm.core import Album, Artist, Track
-
-from krv2.music_collection import Database
+from krv2.music_player.mpd_wrapper import Mpd
 
 LOG = logging.getLogger(__name__)
 
 
 class ContentElement:
-    def __init__(self, caption: str, db_reference: Union[Album, Artist, Track]):
+    def __init__(self, caption: str, artist: Optional[str], album: Optional[str] = None, track: Optional[str] = None):
         self.name = caption
-        self.db_reference: Union[Album, Artist, Track] = db_reference
+        self.artist: Optional[str] = artist
+        self.album: Optional[str] = album
+        self.track: Optional[str] = track
 
 
 class Content:
@@ -33,12 +33,12 @@ class ContentLayer(Enum):
 
 
 class Cursor:
-    current_artist: Optional[Artist] = None
-    current_album: Optional[Album] = None
-    current_track: Optional[Track] = None
+    current_artist: Optional[str] = None
+    current_album: Optional[str] = None
+    current_track: Optional[str] = None
 
-    def __init__(self, index: int, content_layer: ContentLayer, db: Database):
-        self._db = db
+    def __init__(self, index: int, content_layer: ContentLayer, mpd: Mpd):
+        self._mpd = mpd
         self.index: int = index
         self.layer: ContentLayer = content_layer
         self._content = self.build_content_list()
@@ -64,11 +64,11 @@ class Cursor:
     def __repr__(self) -> str:
         pos = f"{self.index}/{self.list_size}: "
         if self.current_artist:
-            pos += f"{self.current_artist.name}"
+            pos += f"{self.current_artist}"
         if self.current_album:
-            pos += f" -> {self.current_album.title}"
+            pos += f" -> {self.current_album}"
         if self.current_track:
-            pos += f" -> {self.current_track.title}"
+            pos += f" -> {self.current_track}"
         return pos
 
     def increment(self) -> bool:
@@ -87,11 +87,11 @@ class Cursor:
 
     def refresh_current_elements(self) -> None:
         if self.layer == ContentLayer.artist_list:
-            self.current_artist = self.content.elements[self.index].db_reference
+            self.current_artist = self.content.elements[self.index].artist
         elif self.layer == ContentLayer.album_list:
-            self.current_album = self.content.elements[self.index].db_reference
+            self.current_album = self.content.elements[self.index].album
         elif self.layer == ContentLayer.track_list:
-            self.current_track = self.content.elements[self.index].db_reference
+            self.current_track = self.content.elements[self.index].track
 
     def build_content_list(self) -> Content:
         content_buildup_instructions = {
@@ -105,24 +105,27 @@ class Cursor:
         return content
 
     def _load_artists(self) -> List[ContentElement]:
-        artists = self._db.get_all_artists()
-        elements = [ContentElement(caption=artist.name, db_reference=artist) for artist in artists]
+        artists = self._mpd.get_artists()
+        elements = [ContentElement(caption=artist, artist=artist) for artist in artists]
         return elements
 
     def _load_albums_of_artist(self) -> List[ContentElement]:
-        albums: List[Album] = self._db.get_albums_of_artist(self.current_artist)
-        return [ContentElement(caption=album.title, db_reference=album) for album in albums]
+        albums: List[str] = self._mpd.get_albums_of_artist(self.current_artist)
+        return [ContentElement(caption=album, artist=self.current_artist, album=album) for album in albums]
 
     def _load_tracks_of_album(self) -> List[ContentElement]:
-        tracks: List[Track] = self._db.get_tracks_of_album(artist=self.current_artist, album=self.current_album)
-        return [ContentElement(caption=track.title, db_reference=track) for track in tracks]
+        tracks: List[str] = self._mpd.get_track_of_album_of_artist(artist=self.current_artist, album=self.current_album)
+        return [
+            ContentElement(caption=track, artist=self.current_artist, album=self.current_album, track=track)
+            for track in tracks
+        ]
 
 
 class Navigation:
-    def __init__(self, cfg_nav: dict, db: Database):
-        self._db: Database = db
+    def __init__(self, cfg_nav: dict, mpd: Mpd):
+        self._mpd = mpd
         self._slice_size = cfg_nav.get("slice_size", 5)
-        self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list, db=self._db)
+        self._cursor = Cursor(index=0, content_layer=ContentLayer.artist_list, mpd=self._mpd)
         self._slice_range: range = self._update_list_slice()
 
     @property
@@ -183,14 +186,16 @@ class Navigation:
             print(self._cursor)
 
     def _derive_cursor_index(self) -> int:
+        index = 0
         lookup_map = {
             ContentLayer.artist_list: self._cursor.current_artist,
             ContentLayer.album_list: self._cursor.current_album,
         }
         try:
-            db_references = [e.db_reference for e in self._cursor.content.elements]
-            index_in_database_elements = db_references.index(lookup_map[self._cursor.layer])
-            return index_in_database_elements
+            names: List[str] = [element.name for element in self._cursor.content.elements]
+            current_name = lookup_map[self._cursor.layer]
+            if names and current_name:
+                index = names.index(current_name)
         except IndexError:
-            LOG.warning("cannot get current cursor index properly")
-            return 0
+            LOG.warning(f"couldn't obtain index. Current Layer = {self._cursor.layer}")
+        return index

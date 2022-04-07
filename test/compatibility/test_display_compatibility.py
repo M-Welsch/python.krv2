@@ -1,15 +1,15 @@
+from test.utils import derive_mock_string
 from unittest.mock import Mock, patch
 
 import pytest
+from PIL import Image
 from PyQt5 import QtWidgets
 from pytest_mock import MockFixture
-from PIL import Image
 
 import krv2.hmi
 from krv2.hmi import Hmi
-from krv2.hmi.hmi_x86 import HmiX86
 from krv2.hmi.hmi_arm import HmiArm
-from test.utils import derive_mock_string
+from krv2.hmi.hmi_x86 import HmiX86
 
 
 @pytest.mark.skip

@@ -45,6 +45,3 @@ def test_get_albums_of_all_artists(mpd_wrapper: Mpd) -> None:
         with mpd_wrapper as m:
             albums = m.get_albums_of_artist(artist)
             assert all([isinstance(album, str) for album in albums])
-
-
-

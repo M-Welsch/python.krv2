@@ -1,11 +1,12 @@
 from enum import Enum
+
 from PIL import Image, ImageDraw, ImageFont
 
-from krv2.music_player.mpd_wrapper import MPDClient
+from krv2.common.buttons import Buttons
 from krv2.hmi.hmi import Hmi
 from krv2.music_collection import Navigation
-from krv2.hardware.port_expander import Buttons
 from krv2.music_collection.navigation import ContentLayer
+from krv2.music_player.mpd_wrapper import Mpd
 
 
 class States(Enum):
@@ -16,8 +17,8 @@ class States(Enum):
 class Logic:
     def __init__(self, hmi: Hmi, cfg_logic: dict) -> None:
         self._hmi = hmi
-        self._mpd = MPDClient(cfg_logic["mpd"])
-        self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], db=self._db)
+        self._mpd = Mpd(cfg_logic["mpd"])
+        self._navigation = Navigation(cfg_nav=cfg_logic["navigation"], mpd=self._mpd)
         self._state = States.navigation
         self.connect_signals()
         self.visualize_list_slice()

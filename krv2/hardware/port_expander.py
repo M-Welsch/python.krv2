@@ -1,10 +1,11 @@
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
+from typing import List
 
 from smbus2 import SMBus
+
+from krv2.common.buttons import Buttons
 
 LOG = logging.getLogger(__file__)
 
@@ -71,26 +72,16 @@ class OutputValue:
     low: int = 0
 
 
-class Buttons(Enum):
-    enc0_sw = 0
-    enc1_sw = 1
-    back = 2
-    pause_play = 3
-    prev_song = 4
-    next_song = 5
-    shuffle_repeat = 6
-    spare = 7
-    next_source = 8
-    dummy = 9
-    button_exit = 10
-
-
 Pin = namedtuple("Pin", "port bit name dir default pullup interrupt")
 
 
 Pins = {
-    "GPB0": Pin(port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPB1": Pin(port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPB0": Pin(
+        port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPB1": Pin(
+        port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
     "GPB2": Pin(
         port="B", bit=2, name=Buttons.back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
@@ -118,12 +109,24 @@ Pins = {
     "GPA0": Pin(
         port="A", bit=0, name=Buttons.next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
-    "GPA1": Pin(port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA2": Pin(port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA3": Pin(port="A", bit=3, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA4": Pin(port="A", bit=4, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA5": Pin(port="A", bit=5, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA6": Pin(port="A", bit=6, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA1": Pin(
+        port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA2": Pin(
+        port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA3": Pin(
+        port="A", bit=3, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA4": Pin(
+        port="A", bit=4, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA5": Pin(
+        port="A", bit=5, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA6": Pin(
+        port="A", bit=6, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
     "GPA7": Pin(
         port="A", bit=7, name=Buttons.button_exit, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
@@ -160,7 +163,7 @@ class MCP23017:
 
         self.mirror_port_interrupts()
 
-    def poll(self) -> list:
+    def poll(self) -> List[Buttons]:
         low_values = []
         pressed_buttons = []
         if self._pin_interface.pe_hmi_interrupt:

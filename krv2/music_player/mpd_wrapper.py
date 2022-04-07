@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
-from mpd import MPDClient, ConnectionError
+from mpd import ConnectionError, MPDClient
 
 LOG = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class Stats:
             albums=int(stats["albums"]),
             songs=int(stats["songs"]),
             db_playtime=int(stats["db_playtime"]),
-            db_update=int(stats["db_update"])
+            db_update=int(stats["db_update"]),
         )
 
 
@@ -70,14 +70,14 @@ def setup_client(conn_params: ConnectionParams) -> MPDClient:
     return client
 
 
-class Mpd:
+class MpdWrapper:
     def __init__(self, cfg_mpd: dict):
         self._conn_params = ConnectionParams.from_cfg(cfg_mpd)
         self._client: MPDClient = setup_client(self._conn_params)
 
-    def __enter__(self):
+    def __enter__(self) -> MPDClient:
         self.connect()
-        return self
+        return self._client
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.close()
@@ -86,34 +86,50 @@ class Mpd:
     def connect(self):
         self._client.connect(host=self._conn_params.host, port=self._conn_params.port)
 
+
+class Mpd:
+    def __init__(self, cfg_mpd: dict):
+        self._mpd = MpdWrapper(cfg_mpd=cfg_mpd)
+
     def artist_startswith(self, startletter: str):
-        return [artist for artist in self.get_artists() if any([
+        return [
+            artist
+            for artist in self.get_artists()
+            if any(
+                [
                     artist.startswith(startletter),
                     artist.startswith(startletter.upper()),
-                    artist.startswith(startletter.lower())
-                    ])
+                    artist.startswith(startletter.lower()),
                 ]
+            )
+        ]
 
-    def get_artists(self):
-        return [item["artist"] for item in self._client.list("artist") if item["artist"]]
+    def get_artists(self) -> List[str]:
+        with self._mpd as client:
+            return [item["artist"] for item in client.list("artist") if item["artist"]]
 
     def get_albums_of_artist(self, artist: str) -> List[str]:
-        albums_query_result = [l['album'] for l in self._client.list('album', 'albumartist', artist, 'group', 'date')]
-        if albums_query_result:
-            return albums_query_result[0]
-        return [""]
+        with self._mpd as client:
+            albums_query_result = [l["album"] for l in client.list("album", "albumartist", artist, "group", "date")]
+            if albums_query_result:
+                return albums_query_result[0]
+            return [""]
 
     def get_track_of_album_of_artist(self, artist: str, album: str) -> Optional[List[str]]:
-        return [l["title"] for l in self._client.list('title', 'artist', artist, 'album', album, 'group', 'track')]
+        with self._mpd as client:
+            return [t["title"] for t in client.list("title", "artist", artist, "album", album, "group", "track")]
 
     def get_tracks_of_artist(self, artist: str) -> List[str]:
-        ...
+        with self._mpd as client:
+            return [t["title"] for t in client.list("title", "artist", artist) if t["title"]]
 
     def play_track(self):
         ...
 
     def stats(self) -> Stats:
-        return Stats.from_client(self._client)
+        with self._mpd as client:
+            return Stats.from_client(client)
 
     def status(self) -> Status:
-        return Status.from_client(self._client)
+        with self._mpd as client:
+            return Status.from_client(client)
