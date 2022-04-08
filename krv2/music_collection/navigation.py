@@ -52,7 +52,7 @@ class Cursor:
     @content.setter
     def content(self, content: Content) -> None:
         self._content = content
-        self.refresh_current_elements()
+        # self.refresh_current_elements()
 
     @property
     def current(self) -> Optional[ContentElement]:
@@ -85,6 +85,38 @@ class Cursor:
             return True
         return False
 
+    # Fixme: use this one?!
+    def lower_layer(self) -> ContentLayer:
+        if self.layer == ContentLayer.artist_list:
+            if self._artist_has_albums():
+                layer = ContentLayer.album_list
+            else:
+                layer = ContentLayer.track_list
+        elif self.layer == ContentLayer.album_list:
+            layer = ContentLayer.track_list
+        else:
+            raise RuntimeError(f"no such layer as {self.layer}")
+        return layer
+
+    def higher_layer(self) -> ContentLayer:
+        if self.layer == ContentLayer.track_list:
+            if self._artist_has_albums():
+                layer = ContentLayer.album_list
+            else:
+                layer = ContentLayer.artist_list
+        elif self.layer == ContentLayer.album_list:
+            layer = ContentLayer.artist_list
+        else:
+            raise RuntimeError(f"no such layer as {self.layer}")
+        return layer
+
+    def reset_current_track_and_maybe_album(self) -> None:
+        if self.layer == ContentLayer.artist_list:
+            self.current_album = None
+            self.current_track = None
+        elif self.layer == ContentLayer.album_list:
+            self.current_track = None
+
     def refresh_current_elements(self) -> None:
         if self.layer == ContentLayer.artist_list:
             self.current_artist = self.content.elements[self.index].artist
@@ -94,15 +126,29 @@ class Cursor:
             self.current_track = self.content.elements[self.index].track
 
     def build_content_list(self) -> Content:
-        content_buildup_instructions = {
-            ContentLayer.artist_list: self._load_artists,
-            ContentLayer.album_list: self._load_albums_of_artist,
-            ContentLayer.track_list: self._load_tracks_of_album,
-        }
-        elements = content_buildup_instructions[self.layer]()
+        if self.layer == ContentLayer.artist_list:
+            elements = self._load_artists()
+        elif self.layer == ContentLayer.album_list:
+            if self._artist_has_albums():
+                elements = self._load_albums_of_artist()
+            else:
+                elements = self._handle_no_albums()
+        elif self.layer == ContentLayer.track_list:
+            elements = self._load_tracks_of_album()
+        else:
+            raise RuntimeError(f"no such navigation layer as {self.layer}")
         content = Content(content_elements=elements)
         self.list_size = content.size
         return content
+
+    def _handle_no_albums(self) -> List[ContentElement]:
+        """returns a list of tracks and sets layer accordingly if artist has no albums, just a loose set of tracks"""
+        self.layer = ContentLayer.track_list
+        self.current_album = ""
+        return self._load_tracks_of_artist()
+
+    def _artist_has_albums(self) -> bool:
+        return bool(self._load_albums_of_artist())
 
     def _load_artists(self) -> List[ContentElement]:
         artists = self._mpd.get_artists()
@@ -115,6 +161,13 @@ class Cursor:
 
     def _load_tracks_of_album(self) -> List[ContentElement]:
         tracks: List[str] = self._mpd.get_track_of_album_of_artist(artist=self.current_artist, album=self.current_album)
+        return [
+            ContentElement(caption=track, artist=self.current_artist, album=self.current_album, track=track)
+            for track in tracks
+        ]
+
+    def _load_tracks_of_artist(self) -> List[ContentElement]:
+        tracks: List[str] = self._mpd.get_tracks_of_artist(self.current_artist)
         return [
             ContentElement(caption=track, artist=self.current_artist, album=self.current_album, track=track)
             for track in tracks
@@ -176,16 +229,24 @@ class Navigation:
 
     def out(self) -> None:
         if not self._cursor.layer == ContentLayer.artist_list:
-            higher_layer = {
-                ContentLayer.track_list: ContentLayer.album_list,
-                ContentLayer.album_list: ContentLayer.artist_list,
-            }
-            self._cursor.layer = higher_layer[self._cursor.layer]
+            self._cursor.layer = self._cursor.higher_layer()
             self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = self._derive_cursor_index()
+            self._cursor.refresh_current_elements()
+            self._cursor.reset_current_track_and_maybe_album()
             print(self._cursor)
 
     def _derive_cursor_index(self) -> int:
+        names: List[str] = [element.name for element in self._cursor.content.elements]
+        if self.layer == ContentLayer.artist_list:
+            index = names.index(self._cursor.current_artist)
+        elif self.layer == ContentLayer.album_list:
+            index = names.index(self._cursor.current_album)
+        else:
+            raise RuntimeError
+        return index
+
+    def __derive_cursor_index(self) -> int:
         index = 0
         lookup_map = {
             ContentLayer.artist_list: self._cursor.current_artist,
@@ -193,7 +254,7 @@ class Navigation:
         }
         try:
             names: List[str] = [element.name for element in self._cursor.content.elements]
-            current_name = lookup_map[self._cursor.layer]
+            current_name = lookup_map[self._cursor.higher_layer()]
             if names and current_name:
                 index = names.index(current_name)
         except IndexError:

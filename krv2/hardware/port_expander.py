@@ -1,17 +1,18 @@
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from smbus2 import SMBus
 
 from krv2.common.buttons import Buttons
+from krv2.hardware.pin_interface import PinInterface
 
 LOG = logging.getLogger(__file__)
 
 
 class PortExpander:
-    def __init__(self):
+    def __init__(self) -> None:
         self._mcp23017 = MCP23017
 
 
@@ -38,26 +39,6 @@ class Registers:
     GPIOB = 0x13  # Data port B
     OLATA = 0x14  # Output latches A
     OLATB = 0x15  # Output latches B
-
-
-@dataclass
-class Pins:
-    GPA0: int = 1
-    GPA1: int = 2
-    GPA2: int = 4
-    GPA3: int = 8
-    GPA4: int = 16
-    GPA5: int = 32
-    GPA6: int = 64
-    GPA7: int = 128
-    GPB0: int = 1
-    GPB1: int = 2
-    GPB2: int = 4
-    GPB3: int = 8
-    GPB4: int = 16
-    GPB5: int = 32
-    GPB6: int = 64
-    GPB7: int = 128
 
 
 @dataclass
@@ -134,7 +115,7 @@ Pins = {
 
 
 class MCP23017:
-    def __init__(self, address, pin_interface) -> None:
+    def __init__(self, address: int, pin_interface: PinInterface) -> None:
         self._pin_interface = pin_interface
         self._address = address
         self._output_a = 0
@@ -176,7 +157,7 @@ class MCP23017:
         return pressed_buttons
 
     @staticmethod
-    def _get_names_of_low_pins(register, port) -> list:
+    def _get_names_of_low_pins(register: int, port: str) -> list:
         value = []
         if register & 128 == 0:
             value.append(f"GP{port}7")
@@ -253,9 +234,9 @@ class MCP23017:
             register=Registers.GPIOB
         )
 
-    def get_interrupt_source(self) -> str:
+    def get_interrupt_source(self) -> Optional[str]:
+        source = None
         if self._pin_interface.pe_hmi_interrupt:
-            source = None
             intfa = self._read_byte_from_register(Registers.INTFA)
             intcapa = self._read_byte_from_register(Registers.INTCAPA)
             source = self.get_pin_from_byte(intfa, "GPA")
@@ -263,9 +244,10 @@ class MCP23017:
                 intfb = self._read_byte_from_register(Registers.INTFB)
                 intcapb = self._read_byte_from_register(Registers.INTCAPB)
                 source = self.get_pin_from_byte(intfb, "GPB")
-            return source
+        return source
 
-    def get_pin_from_byte(self, byte, port: str) -> str:
+    @staticmethod
+    def get_pin_from_byte(byte: int, port: str) -> Optional[str]:
         source = None
         if byte & 128:
             source = f"{port}7"
@@ -312,11 +294,11 @@ class MCP23017:
             source.append(f"{port}0")
         return source
 
-    def _write_byte_to_register(self, register, byte) -> None:
+    def _write_byte_to_register(self, register: int, byte: int) -> None:
         with SMBus(1) as bus:
             bus.write_byte_data(self._address, register, byte)
 
-    def _read_byte_from_register(self, register) -> int:
+    def _read_byte_from_register(self, register: int) -> Optional[int]:
         try:
             with SMBus(1) as bus:
                 data = bus.read_byte_data(self._address, register)
@@ -328,7 +310,6 @@ class MCP23017:
 
     def _handle_i2c_error(self) -> None:
         self.reset_pe()
-        self._setup_pe_defaults()
 
     def reset_pe(self) -> None:
         self._pin_interface.reset_pe()

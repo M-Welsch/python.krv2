@@ -8,7 +8,7 @@ except RuntimeError:
 
 
 class DrehDrueck:
-    def __init__(self):
+    def __init__(self) -> None:
         pins = Pins()
         self._enc0 = Encoder(pins.enc0["a"], pins.enc0["b"])
         self._enc1 = Encoder(pins.enc1["a"], pins.enc1["b"])

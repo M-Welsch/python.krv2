@@ -1,62 +1,22 @@
+from test.fixtures import mpd  # do not delete
 from test.utils import derive_mock_string
-from typing import List
+from typing import Generator, List
 
 import pytest
 from faker import Faker
 from pytest_mock import MockFixture
 
 import krv2.music_collection
-from krv2.music_collection import Database
 from krv2.music_collection.navigation import Content, ContentElement, ContentLayer, Navigation
-
-
-class Artist:
-    def __init__(self, name, db_reference):
-        self.name: str = name
-        self.db_reference: int = db_reference
+from krv2.music_player.mpd_wrapper import Mpd
 
 
 @pytest.fixture
-def nav(db) -> Navigation:
-    yield Navigation({}, db)
-
-
-@pytest.fixture
-def nav_w_fake_content(nav):
-    fake = Faker()
-    lengh_fake_names: int = 2
-    fake_names = [fake.name() for i in range(lengh_fake_names)]
-    nav._content = Content(
-        content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names]
-    )
-    nav._cursor.content = nav._content
-    yield nav
-
-
-def test_load_artists(nav: Navigation, mocker: MockFixture) -> None:
-    fake = Faker()
-    length_artist_list: int = 5
-
-    def get_all_artists() -> List[Artist]:
-        return [Artist(fake.name(), i) for i in range(length_artist_list)]
-
-    nav._db.get_all_artists = get_all_artists
-    artists = nav._cursor._load_artists()
-    assert len(artists) == length_artist_list
-    assert len([element for element in artists if isinstance(element, ContentElement)]) == length_artist_list
-    for artist in artists:
-        assert isinstance(artist, ContentElement)
-        assert isinstance(artist.name, str)
-        # assert isinstance(artist.db_reference, mc.Artist)  # cannot check for that right now
-    print(artists)
+def nav(mpd) -> Generator[Navigation, None, None]:
+    yield Navigation({}, mpd)
 
 
 def test_update_list_slice(nav: Navigation) -> None:
-    # fake = Faker()
-    # lentgh_fake_names: int = 10
-    # fake_names = [fake.name() for i in range(lentgh_fake_names)]
-    # nav._content = Content(
-    #     content_elements=[ContentElement(caption=fakename, db_reference=0) for fakename in fake_names])
     for cursor in range(5):
         nav._cursor.index = cursor
         ls = nav._update_list_slice()
@@ -64,8 +24,7 @@ def test_update_list_slice(nav: Navigation) -> None:
         assert cursor in ls
 
 
-def test_down(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
-    nav = nav_w_fake_content  # just for convenience
+def test_down(nav: Navigation, mocker: MockFixture) -> None:
     m_update_list_slice = mocker.patch(derive_mock_string(krv2.music_collection.Navigation._update_list_slice))
     nav._cursor.index = initial_cursor = 0
     nav._cursor.list_size = len(nav._cursor._content.elements)
@@ -74,13 +33,18 @@ def test_down(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
     assert m_update_list_slice.called_once
 
     m_update_list_slice.reset_mock()
+    nav._cursor.index = nav._cursor.list_size - 2
+    nav.down()
+    assert nav._cursor.index == nav._cursor.list_size - 1
+    assert m_update_list_slice.call_count == 1
+
+    m_update_list_slice.reset_mock()
     nav.down()
     assert nav._cursor.index == nav._cursor.list_size - 1
     assert m_update_list_slice.call_count == 0
 
 
-def test_up(nav_w_fake_content: Navigation, mocker: MockFixture) -> None:
-    nav = nav_w_fake_content  # just for convenience
+def test_up(nav: Navigation, mocker: MockFixture) -> None:
     m_update_list_slice = mocker.patch("krv2.music_collection.Navigation._update_list_slice")
     nav._cursor.index = initial_cursor = 1
     nav.up()
@@ -118,6 +82,7 @@ def test_out(nav: Navigation, mocker: MockFixture) -> None:
     m_derivate_cursor_index = mocker.patch(
         derive_mock_string(krv2.music_collection.navigation.Navigation._derive_cursor_index)
     )
+    nav.down()  # first artist doesn't have albums
     nav._cursor.layer = ContentLayer.track_list
 
     nav.out()
@@ -145,3 +110,16 @@ def test_derive_cursor_index(nav: Navigation) -> None:
     nav.into()
     nav.out()
     assert nav._cursor.index == cursor_index_pre_test
+
+
+def test_derive_cursor_index_multiple(nav: Navigation) -> None:
+    for artist in nav._mpd.get_artists():
+        cursor_index_pre_test = nav._cursor.index
+        layer_pre_test = nav.layer
+        assert isinstance(nav._cursor.current, ContentElement)
+        nav.into()
+        assert not layer_pre_test == nav.layer
+        nav.out()
+        assert nav.layer == layer_pre_test
+        assert nav._cursor.index == cursor_index_pre_test
+        nav.down()
