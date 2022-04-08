@@ -1,7 +1,7 @@
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
 from smbus2 import SMBus
 
@@ -134,7 +134,7 @@ Pins = {
 
 
 class MCP23017:
-    def __init__(self, address, pin_interface):
+    def __init__(self, address, pin_interface) -> None:
         self._pin_interface = pin_interface
         self._address = address
         self._output_a = 0
@@ -148,7 +148,7 @@ class MCP23017:
         self._intcona = 0
         self._intconb = 0
 
-    def setup_pe_defaults(self):
+    def setup_pe_defaults(self) -> None:
         self._local_defvala, dir_register, int_register, pullup_register = self.get_defaults("A")
         self.set_direction_porta(dir_register)
         self.set_default_value_porta(self._local_defvala)
@@ -197,7 +197,7 @@ class MCP23017:
         return value
 
     @staticmethod
-    def get_defaults(port: str):
+    def get_defaults(port: str) -> Tuple[int, int, int, int]:
         dir_register = 0
         def_register = 0
         pullup_register = 0
@@ -211,39 +211,39 @@ class MCP23017:
         print("defaults: ", def_register, dir_register, int_register, pullup_register)
         return def_register, dir_register, int_register, pullup_register
 
-    def set_direction(self, polarity_porta: int, polarity_portb: int):
+    def set_direction(self, polarity_porta: int, polarity_portb: int) -> None:
         self.set_direction_porta(polarity_porta)
         self.set_direction_portb(polarity_portb)
 
-    def set_direction_porta(self, polarity: int):
+    def set_direction_porta(self, polarity: int) -> None:
         self._write_byte_to_register(Registers.IODIRA, polarity)
 
-    def set_direction_portb(self, polarity: int):
+    def set_direction_portb(self, polarity: int) -> None:
         self._write_byte_to_register(Registers.IODIRB, polarity)
 
-    def set_pullups_porta(self, pullups: int):
+    def set_pullups_porta(self, pullups: int) -> None:
         self._write_byte_to_register(Registers.GPPUA, pullups)
 
-    def set_pullups_portb(self, pullups: int):
+    def set_pullups_portb(self, pullups: int) -> None:
         self._write_byte_to_register(Registers.GPPUB, pullups)
 
-    def set_default_value_porta(self, default_value: int):
+    def set_default_value_porta(self, default_value: int) -> None:
         self._local_defvala = default_value
         self._write_byte_to_register(Registers.DEFVALA, default_value)
 
-    def set_default_value_portb(self, default_value: int):
+    def set_default_value_portb(self, default_value: int) -> None:
         self._local_defvalb = default_value
         self._write_byte_to_register(Registers.DEFVALB, default_value)
 
-    def enable_interrupt_porta(self, interrupt_mask: int):
+    def enable_interrupt_porta(self, interrupt_mask: int) -> None:
         self._write_byte_to_register(Registers.GPINTENA, interrupt_mask)
         self._write_byte_to_register(Registers.INTCONA, interrupt_mask)
 
-    def enable_interrupt_portb(self, interrupt_mask: int):
+    def enable_interrupt_portb(self, interrupt_mask: int) -> None:
         self._write_byte_to_register(Registers.GPINTENB, interrupt_mask)
         self._write_byte_to_register(Registers.INTCONB, interrupt_mask)
 
-    def mirror_port_interrupts(self):
+    def mirror_port_interrupts(self) -> None:
         config_register = self._read_byte_from_register(Registers.IOCON)
         config_new = config_register | 0b01000000
         self._write_byte_to_register(Registers.IOCON, config_new)
@@ -312,11 +312,11 @@ class MCP23017:
             source.append(f"{port}0")
         return source
 
-    def _write_byte_to_register(self, register, byte):
+    def _write_byte_to_register(self, register, byte) -> None:
         with SMBus(1) as bus:
             bus.write_byte_data(self._address, register, byte)
 
-    def _read_byte_from_register(self, register):
+    def _read_byte_from_register(self, register) -> int:
         try:
             with SMBus(1) as bus:
                 data = bus.read_byte_data(self._address, register)
@@ -326,9 +326,9 @@ class MCP23017:
             data = None
         return data
 
-    def _handle_i2c_error(self):
+    def _handle_i2c_error(self) -> None:
         self.reset_pe()
         self._setup_pe_defaults()
 
-    def reset_pe(self):
+    def reset_pe(self) -> None:
         self._pin_interface.reset_pe()

@@ -17,7 +17,7 @@ class Artist:
 
 
 @pytest.fixture
-def nav(db):
+def nav(db) -> Navigation:
     yield Navigation({}, db)
 
 

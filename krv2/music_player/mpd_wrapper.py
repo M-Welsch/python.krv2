@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from types import TracebackType
+from typing import List, Optional, Type, Union
 
 from mpd import ConnectionError, MPDClient
 
@@ -22,7 +25,7 @@ class ConnectionParams:
     timeout: float = MPD_DEFAULT_TIMEOUT
 
     @classmethod
-    def from_cfg(cls, cfg_mpd: dict):
+    def from_cfg(cls, cfg_mpd: dict) -> ConnectionParams:
         c = cls()
         for param in ["host", "port", "socket"]:
             try:
@@ -43,7 +46,7 @@ class Stats:
     db_update: int
 
     @classmethod
-    def from_client(cls, client: MPDClient):
+    def from_client(cls, client: MPDClient) -> Stats:
         stats = client.stats()
         return cls(
             uptime=int(stats["uptime"]),
@@ -59,7 +62,7 @@ class Stats:
 @dataclass
 class Status:
     @classmethod
-    def from_client(cls, client: MPDClient):
+    def from_client(cls, client: MPDClient) -> Status:
         ...
         return cls()
 
@@ -79,19 +82,21 @@ class MpdWrapper:
         self.connect()
         return self._client
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: Optional[Type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
+    ) -> None:
         self._client.close()
         self._client.disconnect()
 
-    def connect(self):
+    def connect(self) -> None:
         self._client.connect(host=self._conn_params.host, port=self._conn_params.port)
 
 
 class Mpd:
     def __init__(self, cfg_mpd: dict):
-        self._mpd = MpdWrapper(cfg_mpd=cfg_mpd)
+        self._mpd_wrapper = MpdWrapper(cfg_mpd=cfg_mpd)
 
-    def artist_startswith(self, startletter: str):
+    def artist_startswith(self, startletter: str) -> List[str]:
         return [
             artist
             for artist in self.get_artists()
@@ -105,31 +110,44 @@ class Mpd:
         ]
 
     def get_artists(self) -> List[str]:
-        with self._mpd as client:
+        with self._mpd_wrapper as client:
             return [item["artist"] for item in client.list("artist") if item["artist"]]
 
     def get_albums_of_artist(self, artist: str) -> List[str]:
-        with self._mpd as client:
+        with self._mpd_wrapper as client:
             albums_query_result = [l["album"] for l in client.list("album", "albumartist", artist, "group", "date")]
-            if albums_query_result:
-                return albums_query_result[0]
-            return [""]
+            return self.flatten_list(albums_query_result)
 
-    def get_track_of_album_of_artist(self, artist: str, album: str) -> Optional[List[str]]:
-        with self._mpd as client:
-            return [t["title"] for t in client.list("title", "artist", artist, "album", album, "group", "track")]
+    def get_track_of_album_of_artist(self, artist: str, album: str) -> List[str]:
+        with self._mpd_wrapper as client:
+            track_titles = [
+                t["title"] for t in client.list("title", "artist", artist, "album", album, "group", "track")
+            ]
+            return self.flatten_list(track_titles)
+
+    @staticmethod
+    def flatten_list(query_result: List[Union[Optional[str], List[str]]]) -> List[str]:
+        """processes ['res1', ['res2', 'res3']] -> ['res1', 'res2', 'res3']"""
+        flat_list: List[str] = []
+        if query_result:
+            for album in query_result:
+                if isinstance(album, list):
+                    flat_list.extend(album)
+                elif isinstance(album, str):
+                    flat_list.append(album)
+        return flat_list
 
     def get_tracks_of_artist(self, artist: str) -> List[str]:
-        with self._mpd as client:
+        with self._mpd_wrapper as client:
             return [t["title"] for t in client.list("title", "artist", artist) if t["title"]]
 
-    def play_track(self):
+    def play_track(self) -> None:
         ...
 
     def stats(self) -> Stats:
-        with self._mpd as client:
+        with self._mpd_wrapper as client:
             return Stats.from_client(client)
 
     def status(self) -> Status:
-        with self._mpd as client:
+        with self._mpd_wrapper as client:
             return Status.from_client(client)

@@ -1,8 +1,8 @@
 import logging
 import sys
-from test.mockups import create_fake_db_entries
 
 import pytest
+
 
 def pytest_configure():
     stdout_handler = logging.StreamHandler(sys.stdout)

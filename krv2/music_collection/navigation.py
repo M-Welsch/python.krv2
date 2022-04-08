@@ -62,7 +62,7 @@ class Cursor:
             return None
 
     def __repr__(self) -> str:
-        pos = f"{self.index}/{self.list_size}: "
+        pos = f"{self.index+1}/{self.list_size}: "
         if self.current_artist:
             pos += f"{self.current_artist}"
         if self.current_album:

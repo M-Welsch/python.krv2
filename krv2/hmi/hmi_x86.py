@@ -4,14 +4,14 @@ from PIL import Image, ImageDraw
 from PyQt5 import QtWidgets, uic
 from signalslot import Signal
 
-from krv2.hmi.hmi import Hmi
 from krv2.common.buttons import Buttons
+from krv2.hmi.hmi import Hmi
 
 
 class HmiX86(Hmi):
     update_display = Signal(args=["index", "image"])
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._app = QtWidgets.QApplication(sys.argv)
         self._window = Ui()
         self.enc0 = self._window.enc0
@@ -21,10 +21,10 @@ class HmiX86(Hmi):
         self.button = self._window.button
         self.connect_internal_signals()
 
-    def connect_internal_signals(self):
+    def connect_internal_signals(self) -> None:
         self.update_display.connect(self._window.update_dis)
 
-    def start(self):
+    def start(self) -> None:
         self._app.exec_()
 
     def show_on_display(self, display_index: int, image: Image.Image):
@@ -38,7 +38,7 @@ class Ui(QtWidgets.QMainWindow):
     enc1_sw = Signal()
     button = Signal(args=["name"])
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(Ui, self).__init__()
         uic.loadUi("krv2/mockups/frontplate_conf.ui", self)
 
@@ -86,54 +86,54 @@ class Ui(QtWidgets.QMainWindow):
         elif index == 1:
             self.qV_dis1.setScene(scene)
 
-    def slot_pb_Source(self):
+    def slot_pb_Source(self) -> None:
         print("PB_Source pressed")
         self.button.emit(name=Buttons.next_source)
 
-    def slot_pb_PausePlay(self):
+    def slot_pb_PausePlay(self) -> None:
         print("PB_PausePlay pressed")
         self.button.emit(name=Buttons.pause_play)
 
-    def slot_pb_Previous(self):
+    def slot_pb_Previous(self) -> None:
         print("PB_Previous pressed")
         self.button.emit(name=Buttons.prev_song)
 
-    def slot_pb_Next(self):
+    def slot_pb_Next(self) -> None:
         print("PB_Next pressed")
         self.button.emit(name=Buttons.next_song)
 
-    def slot_pb_randRep(self):
+    def slot_pb_randRep(self) -> None:
         print("PB_randRep pressed")
         self.button.emit(name=Buttons.shuffle_repeat)
 
-    def slot_pb_Spare(self):
+    def slot_pb_Spare(self) -> None:
         print("PB_Spare pressed")
         self.button.emit(name=Buttons.spare)
 
-    def slot_pb_Back(self):
+    def slot_pb_Back(self) -> None:
         print("PB_Back pressed")
         self.button.emit(name=Buttons.back)
 
-    def slot_pb_enc0_up(self):
+    def slot_pb_enc0_up(self) -> None:
         print("PB_enc0_up pressed")
         self.enc0.emit(amount=-1)
 
-    def slot_pb_enc0_down(self):
+    def slot_pb_enc0_down(self) -> None:
         print("PB_enc0_down pressed")
         self.enc0.emit(amount=1)
 
-    def slot_pb_enc0_sw(self):
+    def slot_pb_enc0_sw(self) -> None:
         print("PB_enc0_sw pressed")
         self.button.emit(name=Buttons.enc0_sw)
 
-    def slot_pb_enc1_up(self):
+    def slot_pb_enc1_up(self) -> None:
         print("PB_enc1_up pressed")
         self.enc1.emit(amount=-1)
 
-    def slot_pb_enc1_down(self):
+    def slot_pb_enc1_down(self) -> None:
         print("PB_enc1_down pressed")
         self.enc1.emit(amount=1)
 
-    def slot_pb_enc1_sw(self):
+    def slot_pb_enc1_sw(self) -> None:
         print("PB_enc1_sw pressed")
         self.button.emit(name=Buttons.enc1_sw)
