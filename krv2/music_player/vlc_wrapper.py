@@ -5,34 +5,34 @@ import vlc
 
 
 class VlcWrapper:
-    def __init__(self):
+    def __init__(self) -> None:
         self._instance = vlc.Instance(["--no-xlib"])
         self._list_player = self._instance.media_list_player_new()
         self._player = self._list_player.get_media_player()
         self._shuffle = False
         self._media_list = []
 
-    def setup_list_player(self, file_list: list):
+    def setup_list_player(self, file_list: list) -> None:
         _media_files = [self._instance.media_new(file) for file in file_list]
         self._media_list = self._instance.media_list_new(_media_files)
         self._list_player.set_media_list(self._media_list)
 
-    def repeat_on(self):
+    def repeat_on(self) -> None:
         self._list_player.set_playback_mode(vlc.PlaybackMode.loop)
 
-    def repeat_off(self):
+    def repeat_off(self) -> None:
         self._list_player.set_playback_mode(vlc.PlaybackMode.default)
 
-    def toggle_shuffle(self):
+    def toggle_shuffle(self) -> None:
         self._shuffle = not self._shuffle
 
-    def shuffle_on(self):
+    def shuffle_on(self) -> None:
         self._shuffle = True
 
-    def shuffle_off(self):
+    def shuffle_off(self) -> None:
         self._shuffle = False
 
-    def pause_play(self):
+    def pause_play(self) -> None:
         if (
             self._list_player.get_state() == vlc.State.NothingSpecial
             or self._list_player.get_state() == vlc.State.Paused
@@ -41,7 +41,7 @@ class VlcWrapper:
         else:
             self._list_player.pause()
 
-    def next(self):
+    def next(self) -> None:
         if self._shuffle:
             index = randint(0, len(self._media_list))
             self._list_player.play_item_at_index(index)

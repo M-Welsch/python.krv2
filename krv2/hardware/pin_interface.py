@@ -23,7 +23,7 @@ class Pins:
 class PinInterface:
     __instance = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         gpio_mode = GPIO.BCM
         GPIO.setmode(gpio_mode)
         self._setup_buttons()
@@ -31,14 +31,14 @@ class PinInterface:
         self._setup_internal_signals()
 
     @staticmethod
-    def _setup_buttons():
+    def _setup_buttons() -> None:
         # for button in Pins.buttons.values():
         #     GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         #     GPIO.add_event_detect(button, GPIO.FALLING)
         pass
 
     @staticmethod
-    def _setup_encoder_pins():
+    def _setup_encoder_pins() -> None:
         for enc_pin in Pins.enc0.values():
             GPIO.setup(enc_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(enc_pin, GPIO.FALLING)
@@ -47,22 +47,22 @@ class PinInterface:
             GPIO.add_event_detect(enc_pin, GPIO.FALLING)
 
     @staticmethod
-    def _setup_internal_signals():
+    def _setup_internal_signals() -> None:
         GPIO.setup(Pins.pe["hmi_ninta"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     @property
-    def pe_hmi_interrupt(self):
+    def pe_hmi_interrupt(self) -> bool:
         return not GPIO.input(Pins.pe["hmi_ninta"])
 
     @property
-    def hmi_ninta(self):
+    def hmi_ninta(self) -> bool:
         return GPIO.input(Pins.pe["hmi_ninta"])
 
-    def reset_pe(self):
+    def reset_pe(self) -> None:
         LOG.info("Resetting Port Expanders")
         GPIO.output(Pins.pe["nrst"], GPIO.LOW)
         sleep(0.1)
         GPIO.output(Pins.pe["nrst"], GPIO.HIGH)
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         GPIO.cleanup()

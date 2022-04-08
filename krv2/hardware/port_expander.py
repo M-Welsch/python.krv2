@@ -1,17 +1,18 @@
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple
 
 from smbus2 import SMBus
+
+from krv2.common.buttons import Buttons
+from krv2.hardware.pin_interface import PinInterface
 
 LOG = logging.getLogger(__file__)
 
 
 class PortExpander:
-    def __init__(self):
+    def __init__(self) -> None:
         self._mcp23017 = MCP23017
 
 
@@ -41,26 +42,6 @@ class Registers:
 
 
 @dataclass
-class Pins:
-    GPA0: int = 1
-    GPA1: int = 2
-    GPA2: int = 4
-    GPA3: int = 8
-    GPA4: int = 16
-    GPA5: int = 32
-    GPA6: int = 64
-    GPA7: int = 128
-    GPB0: int = 1
-    GPB1: int = 2
-    GPB2: int = 4
-    GPB3: int = 8
-    GPB4: int = 16
-    GPB5: int = 32
-    GPB6: int = 64
-    GPB7: int = 128
-
-
-@dataclass
 class Dir:
     input: int = 1
     output: int = 0
@@ -72,59 +53,61 @@ class OutputValue:
     low: int = 0
 
 
-class Buttons(Enum):
-    enc0_sw = 0
-    enc1_sw = 1
-    button_back = 2
-    button_pause_play = 3
-    button_prev_song = 4
-    button_next_song = 5
-    button_shuffle_repeat = 6
-    button_spare = 7
-    button_next_source = 8
-    dummy = 9
-    button_exit = 10
-
-
 Pin = namedtuple("Pin", "port bit name dir default pullup interrupt")
 
 
 Pins = {
-    "GPB0": Pin(port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPB1": Pin(port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPB0": Pin(
+        port="B", bit=0, name=Buttons.enc0_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPB1": Pin(
+        port="B", bit=1, name=Buttons.enc1_sw, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
     "GPB2": Pin(
-        port="B", bit=2, name=Buttons.button_back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=2, name=Buttons.back, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB3": Pin(
-        port="B", bit=3, name=Buttons.button_pause_play, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=3, name=Buttons.pause_play, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB4": Pin(
-        port="B", bit=4, name=Buttons.button_prev_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=4, name=Buttons.prev_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB5": Pin(
-        port="B", bit=5, name=Buttons.button_next_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=5, name=Buttons.next_song, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPB6": Pin(
         port="B",
         bit=6,
-        name=Buttons.button_shuffle_repeat,
+        name=Buttons.shuffle_repeat,
         dir=Dir.input,
         default=OutputValue.high,
         pullup=True,
         interrupt=True,
     ),
     "GPB7": Pin(
-        port="B", bit=7, name=Buttons.button_spare, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="B", bit=7, name=Buttons.spare, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
     "GPA0": Pin(
-        port="A", bit=0, name=Buttons.button_next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+        port="A", bit=0, name=Buttons.next_source, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
-    "GPA1": Pin(port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA2": Pin(port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA3": Pin(port="A", bit=3, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA4": Pin(port="A", bit=4, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA5": Pin(port="A", bit=5, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
-    "GPA6": Pin(port="A", bit=6, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True),
+    "GPA1": Pin(
+        port="A", bit=1, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA2": Pin(
+        port="A", bit=2, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA3": Pin(
+        port="A", bit=3, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA4": Pin(
+        port="A", bit=4, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA5": Pin(
+        port="A", bit=5, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
+    "GPA6": Pin(
+        port="A", bit=6, name=Buttons.dummy, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
+    ),
     "GPA7": Pin(
         port="A", bit=7, name=Buttons.button_exit, dir=Dir.input, default=OutputValue.high, pullup=True, interrupt=True
     ),
@@ -132,7 +115,7 @@ Pins = {
 
 
 class MCP23017:
-    def __init__(self, address, pin_interface):
+    def __init__(self, address: int, pin_interface: PinInterface) -> None:
         self._pin_interface = pin_interface
         self._address = address
         self._output_a = 0
@@ -146,7 +129,7 @@ class MCP23017:
         self._intcona = 0
         self._intconb = 0
 
-    def setup_pe_defaults(self):
+    def setup_pe_defaults(self) -> None:
         self._local_defvala, dir_register, int_register, pullup_register = self.get_defaults("A")
         self.set_direction_porta(dir_register)
         self.set_default_value_porta(self._local_defvala)
@@ -161,7 +144,7 @@ class MCP23017:
 
         self.mirror_port_interrupts()
 
-    def poll(self) -> List[str]:
+    def poll(self) -> List[Buttons]:
         low_values = []
         pressed_buttons = []
         if self._pin_interface.pe_hmi_interrupt:
@@ -174,7 +157,7 @@ class MCP23017:
         return pressed_buttons
 
     @staticmethod
-    def _get_names_of_low_pins(register, port) -> list:
+    def _get_names_of_low_pins(register: int, port: str) -> list:
         value = []
         if register & 128 == 0:
             value.append(f"GP{port}7")
@@ -195,7 +178,7 @@ class MCP23017:
         return value
 
     @staticmethod
-    def get_defaults(port: str):
+    def get_defaults(port: str) -> Tuple[int, int, int, int]:
         dir_register = 0
         def_register = 0
         pullup_register = 0
@@ -209,39 +192,39 @@ class MCP23017:
         print("defaults: ", def_register, dir_register, int_register, pullup_register)
         return def_register, dir_register, int_register, pullup_register
 
-    def set_direction(self, polarity_porta: int, polarity_portb: int):
+    def set_direction(self, polarity_porta: int, polarity_portb: int) -> None:
         self.set_direction_porta(polarity_porta)
         self.set_direction_portb(polarity_portb)
 
-    def set_direction_porta(self, polarity: int):
+    def set_direction_porta(self, polarity: int) -> None:
         self._write_byte_to_register(Registers.IODIRA, polarity)
 
-    def set_direction_portb(self, polarity: int):
+    def set_direction_portb(self, polarity: int) -> None:
         self._write_byte_to_register(Registers.IODIRB, polarity)
 
-    def set_pullups_porta(self, pullups: int):
+    def set_pullups_porta(self, pullups: int) -> None:
         self._write_byte_to_register(Registers.GPPUA, pullups)
 
-    def set_pullups_portb(self, pullups: int):
+    def set_pullups_portb(self, pullups: int) -> None:
         self._write_byte_to_register(Registers.GPPUB, pullups)
 
-    def set_default_value_porta(self, default_value: int):
+    def set_default_value_porta(self, default_value: int) -> None:
         self._local_defvala = default_value
         self._write_byte_to_register(Registers.DEFVALA, default_value)
 
-    def set_default_value_portb(self, default_value: int):
+    def set_default_value_portb(self, default_value: int) -> None:
         self._local_defvalb = default_value
         self._write_byte_to_register(Registers.DEFVALB, default_value)
 
-    def enable_interrupt_porta(self, interrupt_mask: int):
+    def enable_interrupt_porta(self, interrupt_mask: int) -> None:
         self._write_byte_to_register(Registers.GPINTENA, interrupt_mask)
         self._write_byte_to_register(Registers.INTCONA, interrupt_mask)
 
-    def enable_interrupt_portb(self, interrupt_mask: int):
+    def enable_interrupt_portb(self, interrupt_mask: int) -> None:
         self._write_byte_to_register(Registers.GPINTENB, interrupt_mask)
         self._write_byte_to_register(Registers.INTCONB, interrupt_mask)
 
-    def mirror_port_interrupts(self):
+    def mirror_port_interrupts(self) -> None:
         config_register = self._read_byte_from_register(Registers.IOCON)
         config_new = config_register | 0b01000000
         self._write_byte_to_register(Registers.IOCON, config_new)
@@ -251,9 +234,9 @@ class MCP23017:
             register=Registers.GPIOB
         )
 
-    def get_interrupt_source(self) -> str:
+    def get_interrupt_source(self) -> Optional[str]:
+        source = None
         if self._pin_interface.pe_hmi_interrupt:
-            source = None
             intfa = self._read_byte_from_register(Registers.INTFA)
             intcapa = self._read_byte_from_register(Registers.INTCAPA)
             source = self.get_pin_from_byte(intfa, "GPA")
@@ -261,9 +244,10 @@ class MCP23017:
                 intfb = self._read_byte_from_register(Registers.INTFB)
                 intcapb = self._read_byte_from_register(Registers.INTCAPB)
                 source = self.get_pin_from_byte(intfb, "GPB")
-            return source
+        return source
 
-    def get_pin_from_byte(self, byte, port: str) -> str:
+    @staticmethod
+    def get_pin_from_byte(byte: int, port: str) -> Optional[str]:
         source = None
         if byte & 128:
             source = f"{port}7"
@@ -310,11 +294,11 @@ class MCP23017:
             source.append(f"{port}0")
         return source
 
-    def _write_byte_to_register(self, register, byte):
+    def _write_byte_to_register(self, register: int, byte: int) -> None:
         with SMBus(1) as bus:
             bus.write_byte_data(self._address, register, byte)
 
-    def _read_byte_from_register(self, register):
+    def _read_byte_from_register(self, register: int) -> Optional[int]:
         try:
             with SMBus(1) as bus:
                 data = bus.read_byte_data(self._address, register)
@@ -324,9 +308,8 @@ class MCP23017:
             data = None
         return data
 
-    def _handle_i2c_error(self):
+    def _handle_i2c_error(self) -> None:
         self.reset_pe()
-        self._setup_pe_defaults()
 
-    def reset_pe(self):
+    def reset_pe(self) -> None:
         self._pin_interface.reset_pe()

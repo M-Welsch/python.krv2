@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Generator
 
 import pytest
 
@@ -11,7 +12,7 @@ from krv2.hardware.displays import Displays
 
 
 @pytest.fixture
-def display():
+def display() -> Generator[Displays, None, None]:
     yield Displays()
 
 

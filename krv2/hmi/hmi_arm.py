@@ -3,8 +3,7 @@ from time import sleep
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
-from PIL import ImageDraw
-from PIL import Image
+from PIL import Image, ImageDraw
 from signalslot import Signal
 
 from krv2.hardware.pin_interface import PinInterface
@@ -25,10 +24,7 @@ class HmiArm(Hmi):
         self._mcp23017.setup_pe_defaults()
         display0 = sh1106(i2c(port=1, address=0x3C))
         display1 = sh1106(i2c(port=1, address=0x3D))
-        self._display = {
-            0: display0,
-            1: display1
-        }
+        self._display = {0: display0, 1: display1}
 
     def connect_signals(self):
         pass

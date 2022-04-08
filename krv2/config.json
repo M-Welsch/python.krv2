@@ -1,8 +1,0 @@
-{
-  "Logging": {
-    "logs_directory": "log"
-  },
-  "Music": {
-    "lib_path": "/home/pi/Music"
-  }
-}

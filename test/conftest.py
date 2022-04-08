@@ -1,6 +1,8 @@
 import logging
 import sys
 
+import pytest
+
 
 def pytest_configure():
     stdout_handler = logging.StreamHandler(sys.stdout)

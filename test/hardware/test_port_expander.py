@@ -1,6 +1,7 @@
 import os
 import sys
 from time import sleep
+from typing import Generator
 
 import pytest
 
@@ -32,7 +33,7 @@ outputs = [
 
 
 @pytest.fixture(scope="class")
-def mcp():
+def mcp() -> Generator[MCP23017, None, None]:
     pin_interface = PinInterface()
     mcp23017 = MCP23017(0x20, pin_interface)
     yield mcp23017
@@ -42,7 +43,7 @@ def mcp():
 class TestMCP23017:
     @staticmethod
     @pytest.mark.skip("never run such a test if any driver is connected to the pe's GP pins!")
-    def test_outputs(mcp):
+    def test_outputs(mcp: MCP23017) -> None:
         for output in outputs:
             mcp.pin_setup(output, 0)
             mcp.pin_output(output, 1)
@@ -50,7 +51,7 @@ class TestMCP23017:
             mcp.pin_setup(output, 1)
 
     @staticmethod
-    def test_input(mcp):
+    def test_input(mcp: MCP23017) -> None:
         mcp.set_direction_porta(0xFF)
         mcp.set_pullups_porta(0xFF)
         mcp.set_direction_portb(0xFF)
@@ -63,7 +64,7 @@ class TestMCP23017:
             pass
 
     @staticmethod
-    def test_interrupt(mcp):
+    def test_interrupt(mcp: MCP23017) -> None:
         mcp.setup_pe_defaults()
         try:
             while True:
@@ -73,7 +74,7 @@ class TestMCP23017:
             pass
 
     @staticmethod
-    def test_poll(mcp):
+    def test_poll(mcp: MCP23017) -> None:
         mcp.setup_pe_defaults()
         try:
             while True:
