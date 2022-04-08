@@ -123,6 +123,7 @@ class Cursor:
         elif self.layer == ContentLayer.album_list:
             self.current_album = self.content.elements[self.index].album
         elif self.layer == ContentLayer.track_list:
+            self.current_album = self.content.elements[self.index].album
             self.current_track = self.content.elements[self.index].track
 
     def build_content_list(self) -> Content:
@@ -198,7 +199,7 @@ class Navigation:
         maximum = self._cursor.content.size
 
         if maximum < self._slice_size:
-            return range(slice_size)
+            return range(maximum)
         if cursor < 3:
             return range(slice_size)
         elif cursor > (maximum - 3):
@@ -223,6 +224,7 @@ class Navigation:
                 ContentLayer.album_list: ContentLayer.track_list,
             }
             self._cursor.layer = lower_layer[self._cursor.layer]
+            self._cursor.refresh_current_elements()
             self._cursor.content = self._cursor.build_content_list()
             self._cursor.index = 0
             print(self._cursor)

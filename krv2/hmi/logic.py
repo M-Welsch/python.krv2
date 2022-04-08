@@ -63,6 +63,8 @@ class Logic:
         name: Buttons
         self._button_mapping[self._state][name]()
         print(f"Button {name} pressed")
+        if name in [Buttons.enc0_sw, Buttons.back]:
+            self.visualize_list_slice()
 
     def visualize_list_slice(self) -> None:
         fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)
