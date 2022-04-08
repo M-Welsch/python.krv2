@@ -27,7 +27,7 @@ class Logic:
                 Buttons.enc0_sw: self._navigation.into,
                 Buttons.enc1_sw: lambda: None,
                 Buttons.back: self._navigation.out,
-                Buttons.pause_play: lambda: None,
+                Buttons.pause_play: self.play_selection,
                 Buttons.prev_song: lambda: None,
                 Buttons.next_song: lambda: None,
                 Buttons.shuffle_repeat: lambda: None,
@@ -65,6 +65,14 @@ class Logic:
         print(f"Button {name} pressed")
         if name in [Buttons.enc0_sw, Buttons.back]:
             self.visualize_list_slice()
+
+    def play_selection(self) -> None:
+        current_selection = self._navigation.current_element
+        self._mpd.add_tracks(
+            artist=current_selection.artist,
+            album=current_selection.album,
+            track=current_selection.track
+        )
 
     def visualize_list_slice(self) -> None:
         fnt = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 9)

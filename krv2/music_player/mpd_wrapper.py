@@ -61,10 +61,30 @@ class Stats:
 
 @dataclass
 class Status:
+    volume: int
+    repeat: int
+    random: int
+    single: int
+    consume: int
+    playlist: int
+    playlistlength: int
+    mixrampdb: float
+    state: str
+
     @classmethod
     def from_client(cls, client: MPDClient) -> Status:
-        ...
-        return cls()
+        status = client.status()
+        return cls(
+            volume=int(status["volume"]),
+            repeat=int(status["repeat"]),
+            random=int(status["random"]),
+            single=int(status["single"]),
+            consume=int(status["consume"]),
+            playlist=int(status["playlist"]),
+            playlistlength=int(status["playlistlength"]),
+            mixrampdb=float(status["mixrampdb"]),
+            state=str(status["state"]),
+        )
 
 
 def setup_client(conn_params: ConnectionParams) -> MPDClient:
@@ -140,6 +160,19 @@ class Mpd:
     def get_tracks_of_artist(self, artist: str) -> List[str]:
         with self._mpd_wrapper as client:
             return [t["title"] for t in client.list("title", "artist", artist) if t["title"]]
+
+    # Fixme: here it crashes currently
+    def add_tracks(self, artist: str, album: Optional[str], track: Optional[str]) -> None:
+        with self._mpd_wrapper as client:
+            if artist and not album and not track:
+                tracks = client.find("artist", artist)
+            elif artist and album and not track:
+                tracks = client.find("artist", artist, "album", album)
+            elif artist and not album and track:
+                tracks = client.find("artist", artist, "title", track)
+            elif artist and album and track:
+                tracks = client.find("artist", artist, "album", album, "title", track)
+            client.add([track["file"] for track in tracks])
 
     def play_track(self) -> None:
         ...

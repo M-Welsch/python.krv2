@@ -193,6 +193,10 @@ class Navigation:
     def layer(self) -> ContentLayer:
         return self._cursor.layer
 
+    @property
+    def current_element(self) -> ContentElement:
+        return self._cursor.current
+
     def _update_list_slice(self) -> range:
         cursor = self._cursor.index
         slice_size = self._slice_size
